@@ -1,0 +1,69 @@
+{% extends "layout.html" %}
+{% block content %}
+    <main class="w-100 m-auto mb-4 p-4 border shadow registration-box" style="max-width: 620px;">
+        <form>
+            <h3 class="mb-4 text-center" style="color:rgb(0, 70, 64)">Service Professional Registration</h3>
+
+            <table class="table-borderless">
+                <tr>
+                    <td><label for="fullName" class="form-label required">Full Name:</label></td>
+                    <td><input type="text" class="form-control" id="fullName" placeholder="Your Name" required></td>
+                </tr>
+                <tr>
+                    <td><label for="email" class="form-label required">Email:</label></td>
+                    <td><input type="email" class="form-control" id="email" placeholder="Your Email" required></td>
+                </tr>
+                <tr>
+                    <td><label for="password" class="form-label required">Password:</label><br><small style="font-size: smaller; color: rgb(0, 83, 76);;">(Must be 6-16 characters long)</small></td>
+                    <td><input type="password" class="form-control" id="password" minlength="6" maxlength="16" placeholder="Password" required></td>
+                </tr>
+                <tr>
+                    <td><label for="mobile" class="form-label required">Mobile Number:</label></td>
+                    <td><input type="tel" class="form-control" id="mobile" pattern="[0-9]{10}" placeholder="10-digit mobile number" required></td>
+                </tr>
+                <tr>
+                    <td><label for="serviceType" class="form-label required">Service Type:</label></td>
+                    <td>
+                        <select class="form-select" id="serviceType" required>
+                            <option value="" selected disabled>Select a service type</option>
+                            <option value="plumbing">Plumbing</option>
+                            <option value="electrical">Electrical</option>
+                            <option value="carpentry">Carpentry</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td><label for="experience" class="form-label required">Experience:</label></td>
+                    <td><input type="number" class="form-control" id="experience" min="0" placeholder="Experience (In Years)" required></td>
+                </tr>
+                <tr>
+                    <td><label for="idProof" class="form-label required">Proof of Identity:</label><small style="font-size: smaller; color: rgb(0, 83, 76);;">(Aadhar,Passport,Driving License)</small></td>
+                    <td><input type="file" class="form-control" id="idProof" required></td>
+                </tr>
+                <tr>
+                    <td><label for="certification" class="form-label">Certifications/Qualifications (if any):</label></td>
+                    <td><input type="file" class="form-control" id="certification"></td>
+                </tr>
+                <tr>
+                    <td><label for="address" class="form-label required">Address:</label></td>
+                    <td><textarea class="form-control" id="address" rows="2" required></textarea></td>
+                </tr>
+                <tr>
+                    <td><label for="pincode" class="form-label required">Pincode:</label></td>
+                    <td><input type="text" class="form-control" id="pincode" pattern="[0-9]{6}" placeholder="123456" required></td>
+                </tr>
+            </table>
+            <small class="required mx-4" style="font-size: smaller; color: rgb(0, 83, 76);"><i>Please fill all the fields marked with asterisk</i></small>
+            <br><br>
+            <div class="text-center">
+                <button class="btn btn-lg btn-custom mb-3" type="submit">Register</button>
+            </div>
+            
+            <div class="text-center" style="font-size: smaller;">
+                <p>Already have an account?
+                <br>
+                <a class="custom-link" href="#">Login here</a></p>
+            </div>
+        </form>
+    </main>
+{% endblock content %}
