@@ -1,0 +1,36 @@
+input:focus {
+    border: 1px solid rgb(0, 134, 101);
+}
+.custom-header {
+    background-color: rgb(0, 179, 134);
+}
+.custom-footer {
+    background-color: lightcyan;
+    font-size:smaller ;
+}
+.logo {
+    margin-left: 20px;
+    height: 80px;
+}
+.logo-heading {
+    font-size: 40px;
+    padding: 20px;
+    color: white;
+}
+.login-box {
+    background-color: rgb(233, 255, 248);
+}
+.btn-custom {
+    background-color: rgb(0, 179, 134);
+    color: white;
+}
+.btn-custom:hover {
+    background-color: rgb(0, 134, 101);
+    color: white;
+}
+.custom-link {
+    text-decoration: none;
+}
+.custom-link:hover {
+    text-decoration: underline; 
+}
