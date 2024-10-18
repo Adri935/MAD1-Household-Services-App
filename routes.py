@@ -1,4 +1,4 @@
-from flask import render_template,url_for
+from flask import render_template,url_for,flash
 from app import app
 
 @app.route("/")
