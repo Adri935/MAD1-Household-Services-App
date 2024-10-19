@@ -19,16 +19,32 @@
 </head>
 
 <body>
-    <div class="page-container">
-        <header class="py-3 mb-4 border-bottom shadow-sm custom-header">
-            <div class="d-flex align-items-center">
-                <img class="logo" src="{{ url_for('static' , filename='logo.png') }}">
-                <span class="logo-heading">
-                    <h1>HomeEase Services</h1>
-                </span>
+    <div class="page-container ">
+        <header class="mb-4 border-bottom shadow-sm custom-header w-100" style="height: fit-content;">
+            <nav class="navbar navbar-expand-lg navbar-custom">
+                <div class="container-fluid">
+                    <a class="navbar-brand" href="#">
+                        <img src="{{ url_for('static',filename='logo.png') }}" alt="Logo" height="40" class="logo">
+                        <span class="logo-heading">HomeEase Services</span>
+                    </a>
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+                        {% block navbar %}
+                        {% endblock %}
+                    </div>
+                </div>
+            </nav>
+            <div class="welcome-message">
+            {% block welcome %}
+            {% endblock welcome %}
             </div>
         </header>
         <main class="content-wrap">
+
+
+
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                     {% for category, message in messages %}

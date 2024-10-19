@@ -3,8 +3,13 @@
 from app import app
 from flask_sqlalchemy import SQLAlchemy 
 from datetime import datetime
+from flask_login import LoginManager, UserMixin, login_required, current_user
 
+
+#login_manager = LoginManager(app)
 db = SQLAlchemy(app)
+
+
 
 ''' 
 class User(db.Model):

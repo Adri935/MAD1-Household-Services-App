@@ -6,12 +6,14 @@ from dotenv import load_dotenv
 import os
 
 bc = Bcrypt()
+load_dotenv()
 
 @app.route("/")
 @app.route("/login")
 def login():
     return render_template('login.html',title='Login')
 
+@app.route("/", methods=['POST'])
 @app.route("/login", methods=['POST'])
 def  login_post():
     email = request.form.get('email')
@@ -19,8 +21,12 @@ def  login_post():
     if not email or not password:
         flash('Please enter your Email and Password to log in','danger')
     
-    if email == 'admin.homeease@homeease.com' and password == os.getenv('adminpwd'):
-        return redirect(url_for('admin_dashboard'))
+    if email == 'admin.homeease@homeease.com':
+        if password == os.getenv('adminpwd'):
+            return redirect(url_for('admin_dashboard'))
+        else:
+            flash('Invalid Password','danger')
+            return redirect(url_for('login'))
 
     user1 = Customer.query.filter_by(email=email).first()
     user2 = ServiceProfessional.query.filter_by(email=email).first()
@@ -29,11 +35,19 @@ def  login_post():
         flash('Invalid Email. No such user exists.','danger')
         return redirect(url_for('login'))
 
-    if user1 and bc.check_password_hash(user1.password, password):
-        return redirect(url_for('customer_dashboard'))
+    if user1:
+        if bc.check_password_hash(user1.password, password):
+            return redirect(url_for('customer_dashboard'))
+        else:
+            flash('Invalid Password','danger')
+            return redirect(url_for('login'))
 
-    if user2 and bc.check_password_hash(user2.password, password):
-        return redirect(url_for('professional_dashboard'))
+    if user2:
+        if bc.check_password_hash(user2.password, password):
+            return redirect(url_for('professional_dashboard'))
+        else:
+            flash('Invalid Password','danger')
+            return redirect(url_for('login'))
 
     
 
@@ -81,7 +95,7 @@ def professional_register():
 def admin_dashboard():
     return render_template('admin_dashboard.html',title='Admin Dashboard')
 
-@app.route("/customer_dashboard")
+@app.route("/customer_dashboard/")
 def customer_dashboard():
     return render_template('customer_dashboard.html',title='Customer Dashboard')
 

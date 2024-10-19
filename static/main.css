@@ -1,3 +1,15 @@
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0px 1000px #ffffff inset !important;
+}
+
 html, body {
     height: 100%;
     margin: 0;
@@ -11,17 +23,14 @@ html, body {
 
 .content-wrap {
     flex: 1 0 auto;
-    justify-content: center;
+    justify-content:flex-start;
+    margin-bottom: 20px;
 }
 
 .custom-footer {
     background-color: lightcyan;
     font-size: smaller;
     flex-shrink: 0;
-}
-
-input:focus {
-    border: 1px solid rgb(0, 134, 101);
 }
 
 .custom-header {
@@ -37,6 +46,32 @@ input:focus {
     font-size: 30px;
     padding: 10px;
     color: white;
+}
+
+.navbar-custom {
+    background-color: #00b386;
+}
+
+.navbar-custom .navbar-brand,
+.navbar-custom .nav-link {
+    color: rgb(201, 255, 233);
+}
+
+.navbar-custom .nav-link:hover {
+    color: #ffffff;
+}
+
+.navbar-nav .current {
+    font-weight: bold;
+    color: white;
+}
+
+.welcome-message {
+    background-color: rgba(255, 255, 255, 0.521);
+    color: black;
+    font-size: 1.25rem;
+    text-align: center;
+    padding: 10px 0;
 }
 
 .login-box {
