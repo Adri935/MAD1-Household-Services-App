@@ -11,16 +11,40 @@
         <a class="nav-link" href="#">Summary</a>
     </li>
     <li class="nav-item">
-        <a class="nav-link" href="#">Logout</a>
+        <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
     </li>
 </ul>
 {% endblock navbar %}
 
-{% block welcome %}
-Welcome, Admin.
-{% endblock %}
-
 {% block content %}
-    
+    <div class="container  table-responsive">
+    <h3 class="">Services</h3>
+    <table class="table table-hover">
+        <thead>
+        <tr class="table-primary">
+            <th>ID</th>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Base Price (In Rupees)</th>
+            <th>Time Required</th>
+            <th>Action</th>
+        </tr>
+        </thead>
+        
+        <tbody class="table-group-divider">
+        {% for service in services %}
+            <tr>
+                <td scope="row">{{ service.id }}</td>
+                <td>{{ service.name }}</td>
+                <td>{{ service.description }}</td>
+                <td>{{ service.price }}</td>
+                <td>{{ service.time_required }}</td>
+                <td><button type="button" class="btn m-1 btn-outline-primary btn-sm">Edit</button> <button class="btn btn-outline-danger btn-sm" type="button">Delete</button> </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+
+    </table>
+    <button type="button" class="btn btn-outline-success btn-sm col-md-2 offset-md-10">+ Add New Service</button>
 
 {% endblock %}

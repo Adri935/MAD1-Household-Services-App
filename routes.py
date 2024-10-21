@@ -1,7 +1,8 @@
 from flask import render_template,url_for,request,flash,redirect
 from app import app
-from models import db,Customer,ServiceProfessional
+from models import db,User,Customer,ServiceProfessional,Service
 from flask_bcrypt import Bcrypt
+from flask_login import login_user,current_user,logout_user,login_required
 from dotenv import load_dotenv
 import os
 
@@ -11,6 +12,8 @@ load_dotenv()
 @app.route("/")
 @app.route("/login")
 def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
     return render_template('login.html',title='Login')
 
 @app.route("/", methods=['POST'])
@@ -21,35 +24,25 @@ def  login_post():
     if not email or not password:
         flash('Please enter your Email and Password to log in','danger')
     
-    if email == 'admin.homeease@homeease.com':
-        if password == os.getenv('adminpwd'):
-            return redirect(url_for('admin_dashboard'))
-        else:
-            flash('Invalid Password','danger')
-            return redirect(url_for('login'))
-
-    user1 = Customer.query.filter_by(email=email).first()
-    user2 = ServiceProfessional.query.filter_by(email=email).first()
-
-    if not user1 and not user2:
+    user = User.query.filter_by(email=email).first()
+    
+    if not user:
         flash('Invalid Email. No such user exists.','danger')
         return redirect(url_for('login'))
 
-    if user1:
-        if bc.check_password_hash(user1.password, password):
-            return redirect(url_for('customer_dashboard'))
+    if user:
+        if bc.check_password_hash(user.password, password):
+            login_user(user,remember=True)
+            return redirect(url_for('dashboard'))
         else:
-            flash('Invalid Password','danger')
-            return redirect(url_for('login'))
+            flash('Incorrect password. Please try again.','danger')
+    return redirect(url_for('login'))
 
-    if user2:
-        if bc.check_password_hash(user2.password, password):
-            return redirect(url_for('professional_dashboard'))
-        else:
-            flash('Invalid Password','danger')
-            return redirect(url_for('login'))
-
-    
+@app.route("/logout") 
+def logout():
+    logout_user()
+    flash("Logged out successfully.",'success')
+    return redirect(url_for('login'))
 
 @app.route("/customer_register")
 def customer_register():
@@ -91,9 +84,23 @@ def customer_register_post():
 def professional_register():
     return render_template('professional_register.html',title='Service Professional Registration')
 
-@app.route("/admin_dashboard")
-def admin_dashboard():
-    return render_template('admin_dashboard.html',title='Admin Dashboard')
+@app.route("/dashboard")
+@login_required
+def dashboard():
+    if not current_user.is_authenticated:
+        flash("Please login to  access dashboard", "danger")
+        return  redirect(url_for('login'))
+    if current_user.role == 'admin':
+        services = Service.query.all()
+        return render_template('admin_dashboard.html',title='Admin Dashboard',services=services)
+    if current_user.role == 'customer':
+        return render_template('customer_dashboard.html',title='Home')
+    if  current_user.role == 'professional':
+        return render_template('professional_dashboard.html',title='Home')
+    
+
+
+
 
 @app.route("/customer_dashboard/")
 def customer_dashboard():
