@@ -144,6 +144,19 @@ html, body {
     color: red;
 }
 
+.page-headings {
+    color:rgb(0, 82, 75);
+}
+
 .t-header {
-    background-color: #00b386 !important;
+    background-color: rgb(0, 179, 134) !important;
+    color:white !important;
+}
+
+.custom-modal {
+    background-color: rgb(223, 255, 245);
+}
+
+.custom-modal .modal-header {
+    color:rgb(0, 70, 64);
 }

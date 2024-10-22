@@ -4,6 +4,7 @@ from app import app
 from flask_sqlalchemy import SQLAlchemy 
 from datetime import datetime
 from flask_login import LoginManager, UserMixin
+from flask_migrate import Migrate
 from flask_bcrypt import Bcrypt
 from dotenv import load_dotenv
 from os import getenv
@@ -13,6 +14,7 @@ bc = Bcrypt()
 
 login_manager = LoginManager(app)
 db = SQLAlchemy(app)
+migrate = Migrate(app,db)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -25,12 +27,13 @@ class User(db.Model,UserMixin):
     email = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.String(128), nullable=False)
     role = db.Column(db.String(20), nullable=False)
+    blocked = db.Column(db.Boolean,default=False)
 
 class Service(db.Model):
     __tablename__ = 'service'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
-    price = db.Column(db.Float, nullable=False)
+    price = db.Column(db.Integer, nullable=False)
     description = db.Column(db.String(250))
     time_required = db.Column(db.String(50))
 
@@ -38,12 +41,14 @@ class ServiceProfessional(db.Model):
     __tablename__ = 'service_professional'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    name = db.Column(db.String(100),nullable=True)
+    photo = db.Column(db.String(255),default="url_for('static',filename='defaultpfp.jpeg')")
     phone = db.Column(db.String(10), nullable=False)
     service_id = db.Column(db.Integer, db.ForeignKey('service.id'), nullable=False)
     experience = db.Column(db.Integer, nullable=False)
     date_created = db.Column(db.DateTime, default=datetime.utcnow)
-    identity_proof = db.Column(db.LargeBinary, nullable=False)
-    certifications = db.Column(db.LargeBinary)
+    identity_proof = db.Column(db.String(255), nullable=False)
+    certifications = db.Column(db.String(255))
     address = db.Column(db.Text, nullable=False)
     pincode = db.Column(db.String(6), nullable=False)
     is_approved = db.Column(db.Boolean, default=False)
@@ -55,6 +60,7 @@ class Customer(db.Model):
     __tablename__ = 'customer'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    name = db.Column(db.String(100),nullable=False)
     phone = db.Column(db.String(10), nullable=False)
     address = db.Column(db.Text, nullable=False)
     pincode = db.Column(db.String(6), nullable=False, index=True)
@@ -99,6 +105,6 @@ with app.app_context():
     admin = User.query.filter_by(role='admin').first()
     if not admin:
         pwd = bc.generate_password_hash(getenv('adminpwd'))
-        admin = User(id=1000,email='admin.homeease@homeease.com',password=pwd,role='admin')
+        admin = User(id=1000,email='admin.homeease@homeease.com',password=pwd,role='admin',blocked=False)
         db.session.add(admin)
         db.session.commit()
