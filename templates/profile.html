@@ -1,0 +1,44 @@
+{% extends "layout2.html" %}
+
+{% block navbar %}
+<ul class="nav nav-underline">
+    <li class="nav-item">
+        <a class="nav-link" href="#">Home</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="#">Search</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="#">Summary</a>
+    </li>
+    <li class="nav-item">
+        <a href="{{ url_for('profile') }}" class="nav-link active" style="color:white;">Profile</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+    </li>
+</ul>
+{% endblock navbar %}
+{% block dashboard_message %}
+    PROFILE
+{% endblock dashboard_message %}
+
+
+{% block content %}
+<div class="container">
+    {% if user.photo %}
+    <img class="rounded-circle" src="{{ url_for('static', filename=user.photo.split('static/')[1]) }}" alt="Profile Photo" width="120" style="float: left;">
+    {% else %}
+    <img class="rounded-circle" src="{{ url_for('static', filename='defaultpfp.jpeg') }}" alt="Profile Photo" width="120">
+    {% endif %}
+
+    <h1 class="px-4 m-3">
+    {% if user.name %}
+            {{ user.name }}
+    {% else %}
+            Admin
+    {% endif %}
+    </h1>
+
+</div>
+{% endblock %}

@@ -11,14 +11,20 @@
         <a class="nav-link" href="#">Summary</a>
     </li>
     <li class="nav-item">
+        <a href="{{ url_for('profile') }}" class="nav-link">Profile</a>
+    </li>
+    <li class="nav-item">
         <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
     </li>
 </ul>
 {% endblock navbar %}
+{% block dashboard_message %}
+    DASHBOARD
+{% endblock dashboard_message %}
 
 {% block content %}
     <div class="container  table-responsive">
-    <h3 class="page-headings">Services</h3>
+    <h3 class="page-headings py-2">Services</h3>
     <table class="table table-hover align-middle">
         <thead class="align-middle">
         <tr class="table-primary">
@@ -40,69 +46,10 @@
                 <td>{{ service.price }}</td>
                 <td>{{ service.time_required }}</td>
                 <td>
-                    <a href="{{ url_for('edit_service', service_id=service.id) }}" class="btn m-1 btn-outline-primary btn-sm">Edit</a> 
-                    <a href="{{ url_for('delete_service', service_id=service.id) }}" class="btn btn-outline-danger btn-sm">Delete</a>
+                    <a href="{{ url_for('edit_service', service_id=service.id) }}" class="btn mr-1 mb-1 btn-outline-primary btn-sm">Edit</a> 
+                    <a href="{{ url_for('delete_service', service_id=service.id) }}" class="btn mb-1 btn-outline-danger btn-sm">Delete</a>
                 </td>
             </tr>
-
-            <!-- Edit Service Modal -->
-            {% if service_to_edit %}
-            <div class="modal show" id="editServiceModal" tabindex="-1" aria-labelledby="editServiceModalLabel" aria-hidden="true" style="display: block;">
-            <div class="modal-dialog">
-                <div class="modal-content shadow-lg custom-modal">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="editServiceModalLabel">Edit Service</h5>
-                    <a href="{{ url_for('dashboard') }}" class="btn-close" aria-label="Close"></a>
-                </div>
-                <div class="modal-body">
-                    <form id="editServiceForm" method="POST" action="/edit_service">
-                    <input type="hidden" name="id" value="{{ service_to_edit.id }}">
-                    <div class="mb-3">
-                        <label for="serviceName" class="form-label">Service Name</label>
-                        <input type="text" class="form-control" id="serviceName" name="name" value="{{ service_to_edit.name }}" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="serviceDescription" class="form-label">Description</label>
-                        <textarea class="form-control" id="serviceDescription" name="description">{{ service_to_edit.description }}</textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label for="servicePrice" class="form-label">Base Price</label>
-                        <input type="number" class="form-control" id="servicePrice" name="price" value="{{ service_to_edit.price }}" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="serviceTime" class="form-label">Time Required</label>
-                        <input type="text" class="form-control" id="serviceTime" name="time_required" value="{{ service_to_edit.time_required }}">
-                    </div>
-                    <button type="submit" class="btn btn-primary">Save changes</button>
-                    </form>
-                </div>
-                </div>
-            </div>
-            </div>
-            {% endif %}
-
-            <!-- Delete Service Modal -->
-            {% if delete_service %}
-            <div class="modal show" id="deleteServiceModal" tabindex="-1" aria-labelledby="deleteServiceModalLabel" aria-hidden="true" style="display: block;">
-            <div class="modal-dialog">
-                <div class="modal-content shadow-lg custom-modal">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="deleteServiceModalLabel">Delete Service</h5>
-                    <a href="{{ url_for('dashboard') }}" class="btn-close" aria-label="Close"></a>
-                </div>
-                
-                <form id="deleteServiceForm" method="POST" action="/delete_service">
-                <div class="modal-body">
-                    <input type="hidden" name="id" value="{{ delete_service.id }}">
-                    <p>Are you sure you want to delete the service "{{ delete_service.name }}"?</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-danger">Delete</button>
-                </div>
-                </form>
-            </div>
-            </div>
-            {% endif %}
 
         {% endfor %}
         </tbody>
@@ -111,60 +58,23 @@
     <!-- Add New Service Button -->
     <a href="{{ url_for('add_service') }}" class="btn btn-outline-success btn-sm col-md-2 offset-md-10">+ Add New Service</a>
     </div>
-
-    
-    <!-- Add Service Modal -->
-    {% if add_service %}
-    <div class="modal show" id="addServiceModal" tabindex="-1" aria-labelledby="addServiceModalLabel" aria-hidden="true" style="display: block;">
-      <div class="modal-dialog">
-        <div class="modal-content shadow-lg custom-modal">
-          <div class="modal-header">
-            <h5 class="modal-title" id="addServiceModalLabel">Add New Service</h5>
-            <a href="{{ url_for('dashboard') }}" class="btn-close" aria-label="Close"></a>
-          </div>
-          
-          <form id="addServiceForm" method="POST" action="/add_service">
-          <div class="modal-body">
-              <div class="mb-3">
-                <label for="newServiceName" class="form-label">Service Name</label>
-                <input type="text" class="form-control" id="newServiceName" name="name" required>
-              </div>
-              <div class="mb-3">
-                <label for="newServiceDescription" class="form-label">Description</label>
-                <textarea class="form-control" id="newServiceDescription" name="description"></textarea>
-              </div>
-              <div class="mb-3">
-                <label for="newServicePrice" class="form-label">Base Price</label>
-                <input type="number" class="form-control" id="newServicePrice" name="price" required>
-              </div>
-              <div class="mb-3">
-                <label for="newServiceTime" class="form-label">Time Required</label>
-                <input type="text" class="form-control" id="newServiceTime" name="time_required">
-              </div>
-          </div>
-          <div class="modal-footer">
-            <button type="submit" class="btn btn-success">Add Service</button>
-          </div>
-        </form>
-        </div>
-      </div>
-    </div>
-    {% endif %}
-
-    <div class="container  table-responsive">
-        <h3 class="page-headings">Service Professionals</h3>
+    <hr>
+    <div class="container m-auto mt-4 table-responsive">
+        <h3 class="page-headings py-2">Service Professionals</h3>
         <table class="table table-hover align-middle">
             <thead class="align-middle">
             <tr class="table-primary">
                 <th class="t-header" scope="col">User ID</th>
                 <th class="t-header" scope="col">Photo</th>
                 <th class="t-header" scope="col">Name</th>
+                <th class="t-header" scope="col">Mobile</th>
+                <th class="t-header" scope="col">Address</th>
                 <th class="t-header" scope="col">Service_ID</th>
-                <th class="t-header" scope="col">Experience (In Years)</th>
+                <th class="t-header" style="width: 3%;" scope="col">Experience (In Years)</th>
                 <th class="t-header" scope="col">Identity-Proof</th>
                 <th class="t-header" scope="col">Certification(s)</th>
                 <th class="t-header" scope="col">Approval Status</th>
-                <th class="t-header" style="width: 18%;" scope="col">Action</th>
+                <th class="t-header" style="width: 15%;" scope="col">Action</th>
             </tr>
             </thead>
             
@@ -173,15 +83,17 @@
                 <tr>
                     <td scope="row">{{ prof.user_id }}</td>
                     <td>
-                        <img src="{{ url_for('static', filename=prof.photo.split('static/')[1].replace('\\', '/')) }}" alt="Profile Photo" width="100">
+                        <img src="{{ url_for('static', filename=prof.photo.split('static/')[1].replace('\\', '/')) }}" alt="Profile Photo" width="80">
                     </td>
                     <td>{{ prof.name }}</td>
+                    <td>{{ prof.phone }}</td>
+                    <td>{{ prof.address }}<br>Pincode: {{ prof.pincode }}</td>
                     <td>{{ prof.service_id }}</td>
                     <td>{{ prof.experience }}</td>
-                    <td><a href="{{ url_for('static', filename=prof.identity_proof.split('static/')[1].replace('\\', '/')) }}" target="_blank">View ID Proof</a></td>
+                    <td><a href="{{ url_for('static', filename=prof.identity_proof.split('static/')[1]) }}" target="_blank">View ID Proof</a></td>
                     <td>
                         {% if prof.certifications != None %}
-                        <a href="{{ url_for('static', filename=prof.certifications.split('static/')[1].replace('\\', '/')) }}" target="_blank">View Certifications</a>
+                        <a href="{{ url_for('static', filename=prof.certifications.split('static/')[1]) }}" target="_blank">View Certifications</a>
                         {% else %}
                             No certifications uploaded
                         {% endif %}
@@ -195,91 +107,224 @@
                     </td>
                     <td>
                         {% if prof.is_approved %}
-                            <a href="" class="btn m-1 btn-success btn-sm disabled">Approved</a>
+                            <a href="" class="btn mr-1 mb-1 btn-success btn-sm disabled">Approved</a>
                         {% else %}
-                            <a href="{{ url_for('approve_professional', prof_id=prof.id) }}" class="btn m-1 btn-outline-primary btn-sm">Approve</a> 
+                            <a href="{{ url_for('approve_professional', prof_id=prof.id) }}" class="btn mr-1 mb-1 btn-outline-primary btn-sm">Approve</a> 
                         {% endif %}
 
                         {% if prof.user_id not in blockedUsers %}
-                            <a href="{{ url_for('block_user', user_id=prof.user_id) }}" class="btn btn-outline-danger btn-sm">Block</a>
+                            <a href="{{ url_for('block_user', user_id=prof.user_id) }}" class="btn mb-1 btn-outline-danger btn-sm">Block</a>
                         {% else %}
-                            <a href="{{ url_for('unblock_user', user_id=prof.user_id) }}" class="btn btn-outline-success btn-sm">Unblock</a>
+                            <a href="{{ url_for('unblock_user', user_id=prof.user_id) }}" class="btn mb-1 btn-outline-success btn-sm">Unblock</a>
                         {% endif %}
                     </td>
-                </tr>                
+                </tr>        
 
-                <!-- Approve Professional Modal -->
-                {% if approve_professional %}
-                <div class="modal show" id="approveProfessionalModal" tabindex="-1" aria-labelledby="approveProfessionalModalLabel" aria-hidden="true" style="display: block;">
-                <div class="modal-dialog">
-                    <div class="modal-content shadow-lg custom-modal">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="approveProfessionalModalLabel">Approve Professional</h5>
-                        <a href="{{ url_for('dashboard') }}" class="btn-close" aria-label="Close"></a>
-                    </div>
-                    
-                    <form id="approveProfessionalForm" method="POST" action="/approve_professional">
-                    <div class="modal-body">
-                        <input type="hidden" name="prof_id" value="{{ approve_professional.id }}">
-                        <p>Are you sure you want to approve the Service Professional {{ approve_professional.name }}?</p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn-success">Approve</button>
-                    </div>
-                    </form>
-                </div>
-                </div>
-                {% endif %}
-
-                <!-- Block User Modal -->
-                {% if block_user %}
-                <div class="modal show" id="blockUserModal" tabindex="-1" aria-labelledby="blockUserModalLabel" aria-hidden="true" style="display: block;">
-                <div class="modal-dialog">
-                    <div class="modal-content shadow-lg custom-modal">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="blockUserModalLabel">Block User</h5>
-                        <a href="{{ url_for('dashboard') }}" class="btn-close" aria-label="Close"></a>
-                    </div>
-                    
-                    <form id="blockUserForm" method="POST" action="/block_user">
-                    <div class="modal-body">
-                        <input type="hidden" name="user_id" value="{{ block_user.id }}">
-                        <p>Are you sure you want to block the User with ID <b>{{ block_user.id }}</b>?</p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn-danger">Block</button>
-                    </div>
-                    </form>
-                </div>
-                </div>
-                {% endif %}
-
-                <!-- Unblock User Modal -->
-                {% if unblock_user %}
-                <div class="modal show" id="unblockUserModal" tabindex="-1" aria-labelledby="unblockUserModalLabel" aria-hidden="true" style="display: block;">
-                <div class="modal-dialog">
-                    <div class="modal-content shadow-lg custom-modal">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="unblockUserModalLabel">Unblock User</h5>
-                        <a href="{{ url_for('dashboard') }}" class="btn-close" aria-label="Close"></a>
-                    </div>
-                    
-                    <form id="unblockUserForm" method="POST" action="/unblock_user">
-                    <div class="modal-body">
-                        <input type="hidden" name="user_id" value="{{ unblock_user.id }}">
-                        <p>Are you sure you want to unblock the User with ID <b>{{ unblock_user.id }}</b>?</p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn-success">Unblock</button>
-                    </div>
-                    </form>
-                </div>
-                </div>
-                {% endif %}
+            {% endfor %}
+            </tbody> 
+        </table>
+    </div>
+    <hr>
+    <div class="container m-auto mt-4 table-responsive">
+        <h3 class="page-headings py-2">Customers</h3>
+        <table class="table table-hover align-middle">
+            <thead class="align-middle">
+            <tr class="table-primary">
+                <th class="t-header" scope="col">User ID</th>
+                <th class="t-header" scope="col">Name</th>
+                <th class="t-header" scope="col">Mobile</th>
+                <th class="t-header" scope="col">Address</th>
+                <th class="t-header" scope="col">Action</th>
+            </tr>
+            </thead>
+            
+            <tbody class="table-group-divider">
+            {% for customer in customers %}
+                <tr>
+                    <td scope="row">{{ customer.user_id }}</td>
+                    <td>{{ customer.name }}</td>
+                    <td>{{ customer.phone }}</td>
+                    <td>{{ customer.address }}<br>Pincode: {{ customer.pincode }}</td>
+                    <td>
+                        {% if customer.user_id not in blockedUsers %}
+                            <a href="{{ url_for('block_user', user_id=customer.user_id) }}" class="btn mb-1 btn-outline-danger">Block</a>
+                        {% else %}
+                            <a href="{{ url_for('unblock_user', user_id=customer.user_id) }}" class="btn mb-1 btn-outline-success">Unblock</a>
+                        {% endif %}
+                    </td>
+                </tr>        
 
             {% endfor %}
             </tbody> 
         </table>
     </div>
 
+
+    <!-- MODALS -->
+
+    <!-- Edit Service Modal -->
+    {% if service_to_edit %}
+        <div class="modal show" id="editServiceModal" tabindex="-1" aria-labelledby="editServiceModalLabel" aria-hidden="true" style="display: block;">
+        <div class="modal-dialog">
+            <div class="modal-content shadow-lg custom-modal">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editServiceModalLabel">Edit Service</h5>
+                <a href="{{ url_for('dashboard') }}" class="btn-close" aria-label="Close"></a>
+            </div>
+            <div class="modal-body">
+                <form id="editServiceForm" method="POST" action="/edit_service">
+                <input type="hidden" name="id" value="{{ service_to_edit.id }}">
+                <div class="mb-3">
+                    <label for="serviceName" class="form-label">Service Name</label>
+                    <input type="text" class="form-control" id="serviceName" name="name" value="{{ service_to_edit.name }}" required>
+                </div>
+                <div class="mb-3">
+                    <label for="serviceDescription" class="form-label">Description</label>
+                    <textarea class="form-control" id="serviceDescription" name="description">{{ service_to_edit.description }}</textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="servicePrice" class="form-label">Base Price</label>
+                    <input type="number" class="form-control" id="servicePrice" name="price" value="{{ service_to_edit.price }}" required>
+                </div>
+                <div class="mb-3">
+                    <label for="serviceTime" class="form-label">Time Required</label>
+                    <input type="text" class="form-control" id="serviceTime" name="time_required" value="{{ service_to_edit.time_required }}">
+                </div>
+                <button type="submit" class="btn btn-primary">Save changes</button>
+                </form>
+            </div>
+            </div>
+        </div>
+        </div>
+    {% endif %}
+    
+    <!-- Delete Service Modal -->
+    {% if delete_service %}
+        <div class="modal show" id="deleteServiceModal" tabindex="-1" aria-labelledby="deleteServiceModalLabel" aria-hidden="true" style="display: block;">
+        <div class="modal-dialog">
+            <div class="modal-content shadow-lg custom-modal">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteServiceModalLabel">Delete Service</h5>
+                <a href="{{ url_for('dashboard') }}" class="btn-close" aria-label="Close"></a>
+            </div>
+            
+            <form id="deleteServiceForm" method="POST" action="/delete_service">
+            <div class="modal-body">
+                <input type="hidden" name="id" value="{{ delete_service.id }}">
+                <p>Are you sure you want to delete the service "{{ delete_service.name }}"?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-danger">Delete</button>
+            </div>
+            </form>
+        </div>
+        </div>
+    {% endif %}
+        
+    <!-- Add Service Modal -->
+    {% if add_service %}
+        <div class="modal show" id="addServiceModal" tabindex="-1" aria-labelledby="addServiceModalLabel" aria-hidden="true" style="display: block;">
+          <div class="modal-dialog">
+            <div class="modal-content shadow-lg custom-modal">
+              <div class="modal-header">
+                <h5 class="modal-title" id="addServiceModalLabel">Add New Service</h5>
+                <a href="{{ url_for('dashboard') }}" class="btn-close" aria-label="Close"></a>
+              </div>
+              
+              <form id="addServiceForm" method="POST" action="/add_service">
+              <div class="modal-body">
+                  <div class="mb-3">
+                    <label for="newServiceName" class="form-label">Service Name</label>
+                    <input type="text" class="form-control" id="newServiceName" name="name" required>
+                  </div>
+                  <div class="mb-3">
+                    <label for="newServiceDescription" class="form-label">Description</label>
+                    <textarea class="form-control" id="newServiceDescription" name="description"></textarea>
+                  </div>
+                  <div class="mb-3">
+                    <label for="newServicePrice" class="form-label">Base Price</label>
+                    <input type="number" class="form-control" id="newServicePrice" name="price" required>
+                  </div>
+                  <div class="mb-3">
+                    <label for="newServiceTime" class="form-label">Time Required</label>
+                    <input type="text" class="form-control" id="newServiceTime" name="time_required">
+                  </div>
+              </div>
+              <div class="modal-footer">
+                <button type="submit" class="btn btn-success">Add Service</button>
+              </div>
+            </form>
+            </div>
+          </div>
+        </div>
+    {% endif %}
+
+    <!-- Approve Professional Modal -->
+    {% if approve_professional %}
+    <div class="modal show" id="approveProfessionalModal" tabindex="-1" aria-labelledby="approveProfessionalModalLabel" aria-hidden="true" style="display: block;">
+    <div class="modal-dialog">
+        <div class="modal-content shadow-lg custom-modal">
+        <div class="modal-header">
+            <h5 class="modal-title" id="approveProfessionalModalLabel">Approve Professional</h5>
+            <a href="{{ url_for('dashboard') }}" class="btn-close" aria-label="Close"></a>
+        </div>
+        
+        <form id="approveProfessionalForm" method="POST" action="/approve_professional">
+        <div class="modal-body">
+            <input type="hidden" name="prof_id" value="{{ approve_professional.id }}">
+            <p>Are you sure you want to approve the Service Professional {{ approve_professional.name }}?</p>
+        </div>
+        <div class="modal-footer">
+            <button type="submit" class="btn btn-success">Approve</button>
+        </div>
+        </form>
+    </div>
+    </div>
+    {% endif %}
+
+    <!-- Block User Modal -->
+    {% if block_user %}
+        <div class="modal show" id="blockUserModal" tabindex="-1" aria-labelledby="blockUserModalLabel" aria-hidden="true" style="display: block;">
+        <div class="modal-dialog">
+            <div class="modal-content shadow-lg custom-modal">
+            <div class="modal-header">
+                <h5 class="modal-title" id="blockUserModalLabel">Block User</h5>
+                <a href="{{ url_for('dashboard') }}" class="btn-close" aria-label="Close"></a>
+            </div>
+            
+            <form id="blockUserForm" method="POST" action="/block_user">
+            <div class="modal-body">
+                <input type="hidden" name="user_id" value="{{ block_user.id }}">
+                <p>Are you sure you want to block the User with ID <b>{{ block_user.id }}</b>?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-danger">Block</button>
+            </div>
+            </form>
+        </div>
+        </div>
+    {% endif %}
+
+    <!-- Unblock User Modal -->
+    {% if unblock_user %}
+    <div class="modal show" id="unblockUserModal" tabindex="-1" aria-labelledby="unblockUserModalLabel" aria-hidden="true" style="display: block;">
+    <div class="modal-dialog">
+        <div class="modal-content shadow-lg custom-modal">
+        <div class="modal-header">
+            <h5 class="modal-title" id="unblockUserModalLabel">Unblock User</h5>
+            <a href="{{ url_for('dashboard') }}" class="btn-close" aria-label="Close"></a>
+        </div>
+        
+        <form id="unblockUserForm" method="POST" action="/unblock_user">
+        <div class="modal-body">
+            <input type="hidden" name="user_id" value="{{ unblock_user.id }}">
+            <p>Are you sure you want to unblock the User with ID <b>{{ unblock_user.id }}</b>?</p>
+        </div>
+        <div class="modal-footer">
+            <button type="submit" class="btn btn-success">Unblock</button>
+        </div>
+        </form>
+    </div>
+    </div>
+    {% endif %}
 {% endblock %}

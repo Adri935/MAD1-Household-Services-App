@@ -79,6 +79,8 @@ def customer_register():
         db.session.commit()
         user = User.query.filter_by(email=email).first()
         new_cust = Customer(user_id=user.id,name=name,phone=phone,address=address,pincode=pincode)
+        db.session.add(new_cust)
+        db.session.commit()
         flash('Account created successfully. Please login to continue.','success')
         return redirect(url_for('login'))
 
@@ -151,9 +153,9 @@ def professional_register():
             phone=phone,
             service_id=service_id,
             experience=experience,
-            identity_proof=id_proof_path,
-            photo=photo_path if photo_path else "static/defaultpfp.jpeg",  # Default photo if not uploaded
-            certifications=certification_path if certification_path else None,
+            identity_proof=id_proof_path.replace('\\', '/'),
+            photo=photo_path.replace('\\', '/') if photo_path else "static/defaultpfp.jpeg",  # Default photo if not uploaded
+            certifications=certification_path.replace('\\', '/') if certification_path else None,
             address=address,
             pincode=pincode
         )
@@ -177,6 +179,55 @@ def dashboard():
         return render_template('customer_dashboard.html',title='Home')
     if  current_user.role == 'professional':
         return render_template('professional_dashboard.html',title='Home')
+
+@app.route('/profile', methods=['GET', 'POST'])
+@login_required
+def profile():
+    if request.method == 'POST':
+        user = db.session.get(User,current_user.id)
+        if user.role == 'customer':
+            customer = Customer.query.filter_by(user_id=user.id).first()
+            customer.name = request.form['name']
+            customer.phone = request.form['phone']
+            customer.address = request.form['address']
+            customer.pincode = request.form['pincode']
+            db.session.commit()
+            flash('Profile updated successfully.','success')
+            return redirect(url_for('profile'))
+
+        elif user.role == 'professional':
+            professional = ServiceProfessional.query.filter_by(user_id=user.id).first()
+            professional.name = request.form['name']
+            professional.phone = request.form['phone']
+            professional.address = request.form['address']
+            professional.pincode = request.form['pincode']
+
+            photo = request.files.get('photo')
+            if photo != 'static/defaultpfp.jpeg':
+                _ , ext = os.path.splitext(photo.filename)
+                filename = secrets.token_hex(8) + ext
+                photo_path = os.path.join('static/profile_pics', filename)
+                photo.save(os.path.join(current_app.root_path, photo_path))
+                path = professional.photo
+                if path!='static/defaultpfp.jpeg':
+                    os.remove(os.path.join(current_app.root_path, path))
+                professional.photo = photo_path.replace('\\', '/')
+
+            db.session.commit()
+            flash('Profile updated successfully.','success')
+            return redirect(url_for('profile'))
+
+    if current_user.role == 'customer':
+        customer = Customer.query.filter_by(user_id=current_user.id).first()
+        return render_template('profile.html', user=customer)
+
+    elif current_user.role == 'professional':
+        professional = ServiceProfessional.query.filter_by(user_id=current_user.id).first()
+        return render_template('profile.html', user=professional)
+
+    else:
+        return render_template('profile.html', user=current_user)
+
     
 
 @app.route('/edit_service', methods=['GET', 'POST'])
@@ -184,17 +235,18 @@ def edit_service():
     services = Service.query.all()
     if request.method == 'POST':
         service_id = request.form.get('id')
-        service = Service.query.get(service_id)
+        service = db.session.get(Service,service_id)
         service.name = request.form['name']
         service.description = request.form['description']
         service.price = request.form['price']
         service.time_required = request.form['time_required']
         db.session.commit()
+        flash('Service updated successfully.','success')
         return redirect(url_for('dashboard'))
 
     # If request is GET, load the service to edit
     service_id = request.args.get('service_id')
-    service_to_edit = Service.query.get(service_id)
+    service_to_edit = db.session.get(Service,service_id)
     return render_template('admin_dashboard.html', service_to_edit=service_to_edit, title='Admin Dashboard', services=services, customers=Customer.query.all(), professionals=ServiceProfessional.query.all(), blockedUsers= [user.id for user in User.query.filter_by(blocked=True).all()])
 
 @app.route('/delete_service', methods=['GET', 'POST'])
@@ -202,14 +254,15 @@ def delete_service():
     services = Service.query.all()
     if request.method == 'POST':
         service_id = request.form.get('id')
-        service = Service.query.get(service_id)
+        service = db.session.get(Service,service_id)
         db.session.delete(service)
         db.session.commit()
+        flash('Service deleted successfully.','success')
         return redirect(url_for('dashboard'))
 
     # If request is GET, load the service to delete
     service_id = request.args.get('service_id')
-    delete_service = Service.query.get(service_id)
+    delete_service = db.session.get(Service,service_id)
     return render_template('admin_dashboard.html', delete_service=delete_service, title='Admin Dashboard', services=services, customers=Customer.query.all(), professionals=ServiceProfessional.query.all(), blockedUsers= [user.id for user in User.query.filter_by(blocked=True).all()])
 
 @app.route('/add_service', methods=['GET', 'POST'])
@@ -224,6 +277,7 @@ def add_service():
         )
         db.session.add(new_service)
         db.session.commit()
+        flash('Service added successfully.','success')
         return redirect(url_for('dashboard'))
 
     return render_template('admin_dashboard.html', add_service=True, title='Admin Dashboard', services=services, customers=Customer.query.all(), professionals=ServiceProfessional.query.all(), blockedUsers= [user.id for user in User.query.filter_by(blocked=True).all()])
@@ -233,40 +287,43 @@ def approve_professional():
     professionals = ServiceProfessional.query.all()
     if request.method == 'POST':
         professional_id = request.form.get('prof_id')
-        professional = ServiceProfessional.query.get(professional_id)
+        professional = db.session.get(ServiceProfessional,professional_id)
         professional.is_approved = True
         db.session.commit()
+        flash('Professional approved successfully.','success')
         return redirect(url_for('dashboard'))
 
     # If request is GET, load the professional to approve
     professional_id = request.args.get('prof_id')
-    approve_professional = ServiceProfessional.query.get(professional_id)
+    approve_professional = db.session.get(ServiceProfessional,professional_id)
     return render_template('admin_dashboard.html', approve_professional=approve_professional, title='Admin Dashboard', services=Service.query.all(), customers=Customer.query.all(), professionals=professionals, blockedUsers= [user.id for user in User.query.filter_by(blocked=True).all()])
 
 @app.route('/block_user', methods=['GET', 'POST'])
 def block_user():
     if request.method == 'POST':
         user_id = request.form.get('user_id')
-        user = User.query.get(user_id)
+        user = db.session.get(User,user_id)
         user.blocked = True
         db.session.commit()
+        flash('User blocked successfully.','success')
         return redirect(url_for('dashboard'))
 
     # If request is GET, load the user to block
     user_id = request.args.get('user_id')
-    block_user = User.query.get(user_id)
+    block_user = db.session.get(User,user_id)
     return render_template('admin_dashboard.html', block_user=block_user, title='Admin Dashboard', services=Service.query.all(), customers=Customer.query.all(), professionals=ServiceProfessional.query.all(), blockedUsers= [user.id for user in User.query.filter_by(blocked=True).all()])
 
 @app.route('/unblock_user', methods=['GET', 'POST'])
 def unblock_user():
     if request.method == 'POST':
         user_id = request.form.get('user_id')
-        user = User.query.get(user_id)
+        user = db.session.get(User,user_id)
         user.blocked = False
         db.session.commit()
+        flash('User unblocked successfully.','success')
         return redirect(url_for('dashboard'))
 
     # If request is GET, load the user to block
     user_id = request.args.get('user_id')
-    unblock_user = User.query.get(user_id)
+    unblock_user = db.session.get(User,user_id)
     return render_template('admin_dashboard.html', unblock_user=unblock_user, title='Admin Dashboard', services=Service.query.all(), customers=Customer.query.all(), professionals=ServiceProfessional.query.all(), blockedUsers= [user.id for user in User.query.filter_by(blocked=True).all()])
