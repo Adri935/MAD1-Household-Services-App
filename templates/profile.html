@@ -3,10 +3,10 @@
 {% block navbar %}
 <ul class="nav nav-underline">
     <li class="nav-item">
-        <a class="nav-link" href="#">Home</a>
+        <a class="nav-link" href="{{ url_for('dashboard') }}">Home</a>
     </li>
     <li class="nav-item">
-        <a class="nav-link" href="#">Search</a>
+        <a class="nav-link" href="{{ url_for('search') }}">Search</a>
     </li>
     <li class="nav-item">
         <a class="nav-link" href="#">Summary</a>
@@ -23,22 +23,83 @@
     PROFILE
 {% endblock dashboard_message %}
 
-
 {% block content %}
-<div class="container">
-    {% if user.photo %}
-    <img class="rounded-circle" src="{{ url_for('static', filename=user.photo.split('static/')[1]) }}" alt="Profile Photo" width="120" style="float: left;">
-    {% else %}
-    <img class="rounded-circle" src="{{ url_for('static', filename='defaultpfp.jpeg') }}" alt="Profile Photo" width="120">
+    {% if blocked %}
+    <div class="alert alert-danger fade show" role="alert">
+        Your account has been blocked. Please contact the administrator.
+    </div>
     {% endif %}
+    <div class="container m-auto" style="min-width: min-content; max-width: 70%;">
+        <div class="d-flex flex-column p-5 border shadow border-success-subtle">
+            <div class="d-flex align-items-center">
+                <div class="flex-shrink-0">
+                    {% if user.photo %}
+                    <img class="rounded-circle account-img" src="{{ url_for('static', filename=user.photo.split('static/')[1]) }}" alt="Profile Photo" style="width: 8em; object-fit:cover;">
+                    {% else %}
+                    <img class="rounded-circle account-img" src="{{ url_for('static', filename='defaultpfp.jpeg') }}" alt="Profile Photo" style="width:8em;">
+                    {% endif %}
+                </div>
+                <div class="flex-grow-1 my-auto">
+                    <h1 class="page-headings account-heading">
+                        {% if user.name %}
+                                {{ user.name }}
+                        {% else %}
+                                Admin
+                        {% endif %}
+                    </h1>
+                    {% if user.user.role == 'professional' %}
+                        <small>
+                        {% if user.is_approved %}
+                            <span class="badge rounded-pill bg-success">Approved Professional</span>
+                        {% else %}
+                            <span class="badge rounded-pill bg-warning">Pending Approval</span>
+                        {% endif %}
+                        </small>
+                    {% endif %}
+                    <p class="text-secondary">
+                        {% if user.role == 'admin' %}
+                            {{ user.email }}
+                        {% else %}
+                            {{ user.user.email }}
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+            {% if user.role != 'admin' %}
+                <hr>
+                <div class="d-flex flex-column">
+                    <h2 class="page-headings">User Information</h2>
+                    <form action="{{ url_for('profile') }}" method="post" enctype="multipart/form-data">
+                        <label for="name" class="form-label">Name:</label>
+                        <input type="text" name="name" value="{{ user.name }}" class="form-control w-50 mb-3" required>
+                        <label for="phone" class="form-label">Mobile Number:</label>
+                        <input type="tel" class="form-control w-50 mb-3" name="phone" pattern="[0-9]{10}" value="{{ user.phone }}" required>
+                        <label for="address" class="form-label">Address:</label>
+                        <textarea class="form-control w-50 mb-3" name="address" rows="2" required>{{ user.address }}</textarea>
+                        <label for="pincode" class="form-label">Pincode:</label>
+                        <input type="text" class="form-control w-50 mb-3" name="pincode" pattern="[0-9]{6}" value="{{ user.pincode }}" required>
+                        <label for="photo" class="form-label">Update Profile Photo:</label>
+                        <input type="file" class="form-control w-50 mb-3" name="photo">
+                        {% if user.user.role == 'professional' %}
+                            {% if user.certifications %}
+                                <label for="certifications" class="form-label">Update Certifications:</label> &nbsp;<a href="{{ url_for('static', filename=user.certifications.split('static/')[1]) }}" target="_blank">View your uploaded certifications</a>
+                                <input type="file" class="form-control w-50 mb-3" name="certifications">
+                            {% else %}
+                                <label for="certifications" class="form-label">Upload Certifications:</label>
+                                <input type="file" class="form-control w-50 mb-3" name="certifications">
+                            {% endif %}
+                        {% endif %}
+                        {% if blocked %}
+                            <button type="submit" class="btn btn-success disabled">Save Changes</button>
+                            <small>You cannot edit your profile</small>
+                        {% else %}
+                            <button type="submit" class="btn btn-custom">Save Changes</button>
+                        {% endif %}
 
-    <h1 class="px-4 m-3">
-    {% if user.name %}
-            {{ user.name }}
-    {% else %}
-            Admin
-    {% endif %}
-    </h1>
-
-</div>
+                    </form>
+                </div>
+            {% endif %}
+        </div>
+        
+    </div>
 {% endblock %}

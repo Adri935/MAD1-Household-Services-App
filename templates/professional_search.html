@@ -1,0 +1,40 @@
+{% extends "layout2.html" %}
+
+{% block navbar %}
+<ul class="nav nav-underline">
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('home') }}">Home</a>
+    </li>
+    {% if not blocked %}
+    <li class="nav-item">
+        <a class="nav-link active" style="color:white;" href="{{ url_for('search') }}">Search</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="#">Summary</a>
+    </li>
+    {% endif %}
+    <li class="nav-item">
+        <a href="{{ url_for('profile') }}" class="nav-link">Profile</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+    </li>
+</ul>
+{% endblock navbar %}
+{% block dashboard_message %}
+    SEARCH
+{% endblock dashboard_message %}
+
+
+{% block content %}
+    {% if blocked %}
+    <div class="alert alert-danger fade show" role="alert">
+        Your account has been blocked. Please contact the administrator at <a href="mailto:admin.homeease@homeease.com">admin.homeease@homeease.com</a>.
+    </div>
+    {% else %}
+
+    {% endif %}
+    
+    
+
+{% endblock %}

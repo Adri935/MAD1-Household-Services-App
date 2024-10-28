@@ -1,4 +1,18 @@
 {% extends "layout.html" %}
+{% block navbar %}
+<ul class="nav nav-underline">
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('home') }}">Home</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('login') }}">Login</a> 
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('customer_register') }}">Register as Customer</a>
+    </li>
+</ul>
+{% endblock navbar %}
+
 {% block content %}
     <main class="w-100 m-auto mb-4 p-4 border shadow registration-box" style="max-width: 620px;">
         <form action="" method="post" enctype="multipart/form-data">

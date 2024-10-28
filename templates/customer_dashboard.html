@@ -3,15 +3,20 @@
 {% block navbar %}
 <ul class="nav nav-underline">
     <li class="nav-item">
-        <a class="nav-link active" style="color:white;" href="#">Home</a>
+        <a class="nav-link active" style="color:white;" href="{{ url_for('home') }}">Home</a>
     </li>
     <li class="nav-item">
-        <a class="nav-link" href="#">Search</a>
+        <a class="nav-link" href="{{ url_for('services') }}">Services</a>
     </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('search') }}">Search</a>
+    </li>
+    {% if current_user.is_authenticated %}
+    {% if not blocked %}
     <li class="nav-item">
         <a class="nav-link" href="#">Summary</a>
     </li>
-    {% if current_user.is_authenticated %}
+    {% endif %}
     <li class="nav-item">
         <a href="{{ url_for('profile') }}" class="nav-link">Profile</a>
     </li>
@@ -29,11 +34,202 @@
 </ul>
 {% endblock navbar %}
 {% block dashboard_message %}
-    DASHBOARD
+DASHBOARD
 {% endblock dashboard_message %}
 
 
 {% block content %}
-    
+{% if blocked %}
+<div class="alert alert-danger fade show" role="alert">
+    Your account has been blocked. Please contact the administrator at <a
+        href="mailto:admin.homeease@homeease.com">admin.homeease@homeease.com</a>.
+</div>
+{% else %}
+{% if current_user.is_authenticated %}
+<h2 class="page-headings mx-3 px-3">Welcome, {{ user.name }}!</h2>
+{% else %}
+<h2 class="page-headings mx-3 px-3">Home services at your doorstep!</h2>
+{% endif %}
+<div class="container mt-5 w-100">
+    <div class="row">
+        <h4 class="page-headings mb-3 col-12 col-sm-6 col-lg-6">What are you looking for today?</h4>
+    </div>
+    <div class="card-group">
+        <div class="row gy-4">
+            <div class="col-12 col-sm-6 col-lg-2">
 
-{% endblock %}
+                <a href="{{ url_for('services',stype='cleaning') }}">
+                    <div class="card mb-4 shadow" style="width: 10em; height:16em">
+                        <img src="{{ url_for('static',filename='cleaner.jpg') }}" class="card-img-top img-fluid"
+                            style="height: 70%; object-fit: contain;" alt="Cleaner">
+                        <div class="card-body">
+                            <h5 class="card-title">Cleaner</h5>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-12 col-sm-6 col-lg-2">
+                <a href="{{ url_for('services',stype='salon') }}">
+                    <div class="card mb-4 shadow" style="width: 10em; height:16em">
+                        <img src="{{ url_for('static',filename='salon.webp')}}" class="card-img-top img-fluid"
+                            style="height: 70%; object-fit: contain;" alt="Salon">
+                        <div class="card-body">
+                            <h5 class="card-title">Salon</h5>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-12 col-sm-6 col-lg-2">
+                <a href="{{ url_for('services',stype='plumbing') }}">
+                    <div class="card mb-4 shadow" style="width: 10em; height:16em">
+                        <img src="{{ url_for('static',filename='plumber.webp')}}" class="card-img-top img-fluid"
+                            style="height: 70%; object-fit: contain;" alt="Plumber">
+                        <div class="card-body">
+                            <h5 class="card-title">Plumber</h5>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-12 col-sm-6 col-lg-2">
+                <a href="{{ url_for('services',stype='electrical') }}">
+                    <div class="card mb-4 shadow" style="width: 10em; height:16em">
+                        <img src="{{ url_for('static',filename='electrician.png')}}" class="card-img-top img-fluid"
+                            style="height: 70%; object-fit: contain;" alt="Electrician">
+                        <div class="card-body">
+                            <h5 class="card-title">Electrician</h5>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-12 col-sm-6 col-lg-2">
+                <a href="{{ url_for('services',stype='repair') }}">
+                    <div class="card mb-4 shadow" style="width: 10em; height:16em">
+                        <img src="{{ url_for('static',filename='acrepair.webp')}}" class="card-img-top img-fluid"
+                            style="height: 70%; object-fit: contain;" alt="AC and Appliance Repair">
+                        <div class="card-body">
+                            <h5 class="card-title" style="font-size: 1em;">AC & Appliance Repair</h5>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-12 col-sm-6 col-lg-2">
+                <a href="{{ url_for('services') }}">
+                    <div class="card mb-4 shadow" style="width: 10em; height:16em">
+                        <img src="{{ url_for('static',filename='others.jpg')}}" class="card-img-top img-fluid"
+                            style="height: 70%; object-fit: contain;" alt="Other Services">
+                        <div class="card-body">
+                            <h5 class="card-title" style="font-size: 1.2em;">All Services</h5>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+        </div>
+    </div>
+    {% if not current_user.is_authenticated %}
+    <div class="text-center">
+        <h2 class="page-headings">Join us to explore more services!</h2>
+    </div>
+
+    {% else %}
+    <div class="container m-auto mt-4 table-responsive">
+        <h3 class="page-headings py-2">Your Service History</h3>
+        <table class="table table-hover align-middle">
+            <thead class="align-middle">
+                <tr class="table-primary">
+                    <th class="t-header" scope="col" style="width: 5%;">Request ID</th>
+                    <th class="t-header" scope="col" style="width: 30%;">Service</th>
+                    <th class="t-header" scope="col" style="width: 15%;">Professional Name</th>
+                    <th class="t-header" scope="col" style="width: 10%;">Phone Number</th>
+                    <th class="t-header" scope="col" style="width: 10%;">Date of Request</th>
+                    <th class="t-header" scope="col" style="width: 10%;">Date of Completion</th>
+                    <th class="t-header" scope="col" style="width: 15%;">Remarks</th>
+                    <th class="t-header" scope="col" style="width: 15%;">Action</th>
+                </tr>
+            </thead>
+            {% if not requests %}
+            <tbody>
+                <tr>
+                    <td colspan="7" class="text-center">No requests found</td>
+                </tr>
+            </tbody>
+            {% else %}
+            <tbody class="table-group-divider">
+                {% for request in requests %}
+                <tr>
+                    <td scope="row">{{ request.id }}</td>
+                    <td>{{ request.service.name }}
+                        <br>
+                        <small>{{ request.service.description }}</small>
+                    </td>
+                    {% set flag=True %}
+                    {% if request.prof_id %}
+                    <td>{{ request.professional.name }}</td>
+                    <td>{{ request.professional.phone }}</td>
+                    {% set flag=False %}
+                    {% endif %}
+                    {% if flag %}
+                    <td colspan="2" style="text-align: center;">Professional not assigned yet</td>
+                    {% endif %}
+                    <td>{{ request.date_of_request | utc_to_local }}</td>
+                    <td>
+                        {% if request.date_of_completion %}
+                        {{ request.date_of_completion | utc_to_local }}
+                        {% else %}
+                        Not completed yet
+                        {% endif %}
+                    </td>
+                    <td>{{ request.remarks }} 
+                        <div><a href="{{ url_for('edit_remarks',request_id=request.id) }}">Edit Remarks</a></div>
+                    </td>
+                    <td>
+                        {% if request.service_status == 'requested' %}
+                        <a href="" class="btn btn-sm mb-1 btn-outline-danger">Cancel</a>
+                        <a href="" class="btn btn-sm mb-1 btn-outline-primary disabled">Requested</a>
+                        {% elif request.service_status == 'accepted' %}
+                        <a href="" class="btn btn-sm mb-1 btn-outline-success disabled">Accepted</a>
+                        {% elif request.service_status == 'in progress' %}
+                        <a href="" class="btn btn-sm mb-1 btn-outline-primary">Close Request</a>
+                        {% elif request.service_status == 'completed' %}
+                        <a href="" class="btn mb-1 btn-outline-success disabled">Completed</a>
+                        {% endif %}
+                    </td>
+                </tr>
+
+                {% endfor %}
+            </tbody>
+            {% endif %}
+        </table>
+    </div>
+    {% endif %}
+
+
+    {% endif %}
+
+    <!-- MODALS -->
+    {% if edit_remarks %}
+    <div class="modal show" id="editRemarksModal" tabindex="-1" aria-labelledby="editRemarksModalLabel"
+        aria-hidden="true" style="display: block;">
+        <div class="modal-dialog">
+            <div class="modal-content shadow-lg custom-modal">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editRemarksModalLabel">Edit Remarks</h5>
+                    <a href="{{ url_for('dashboard') }}" class="btn-close" aria-label="Close"></a>
+                </div>
+
+                <form id="editRemarksForm" method="POST" action="{{ url_for('edit_remarks') }}">
+                    <div class="modal-body">
+                        <input type="hidden" name="id" value="{{ edit_remarks.id }}">
+                        <p>You are editing remarks for service <b>{{ edit_remarks.service.name }}</b>.</p>
+                        <label for="remarks">Remarks:</label>
+                        <textarea class="form-control" id="remarks" name="remarks" rows="2">{{ edit_remarks.remarks }}</textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-success">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+
+        {% endblock %}

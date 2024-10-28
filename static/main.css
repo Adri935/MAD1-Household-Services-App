@@ -19,6 +19,7 @@ html, body {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    flex-wrap: wrap;    
 }
 
 .content-wrap {
@@ -35,15 +36,16 @@ html, body {
 
 .custom-header {
     background-color: rgb(0, 179, 134);
+    font-size: 1.5rem;
+    text-wrap: wrap;
 }
 
 .logo {
-    margin-left: 20px;
     height: 60px;
 }
 
 .logo-heading {
-    font-size: 30px;
+    font-size: 2rem;
     padding: 10px;
     color: white;
 }
@@ -55,6 +57,7 @@ html, body {
 .navbar-custom .navbar-brand,
 .navbar-custom .nav-link {
     color: rgb(201, 255, 233);
+    font-size: 1rem;
 }
 
 .navbar-custom .nav-link:hover {
@@ -142,6 +145,19 @@ html, body {
 .required:after {
     content: " *";
     color: red;
+}
+
+.account-img {
+    height: 125px;
+    width: 125px;
+    margin-right: 20px;
+    margin-bottom: 16px;
+    float: left;
+    border: rgba(0, 0, 0, 0.541) 1px solid;
+  }
+  
+.account-heading {
+    font-size: 1.5rem;
 }
 
 .page-headings {

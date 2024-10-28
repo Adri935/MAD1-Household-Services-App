@@ -2,10 +2,10 @@
 {% block navbar %}
 <ul class="nav nav-underline">
     <li class="nav-item">
-        <a class="nav-link active" style="color:white;" href="#">Home</a>
+        <a class="nav-link active" style="color:white;" href="{{ url_for('home') }}">Home</a>
     </li>
     <li class="nav-item">
-        <a class="nav-link" href="#">Search</a>
+        <a class="nav-link" href="{{ url_for('search') }}">Search</a>
     </li>
     <li class="nav-item">
         <a class="nav-link" href="#">Summary</a>
@@ -30,10 +30,12 @@
         <tr class="table-primary">
             <th class="t-header" scope="col">ID</th>
             <th class="t-header" scope="col">Name</th>
-            <th class="t-header" scope="col" style="width: 30%;">Description</th>
+            <th class="t-header" scope="col" style="width: 27%;">Description</th>
             <th class="t-header" scope="col">Base Price (In Rupees)</th>
             <th class="t-header" scope="col">Estimated Time Required</th>
-            <th class="t-header" scope="col">Action</th>
+            <th class="t-header" scope="col" style="width: 10%;">No. of Professionals</th>
+            <th class="t-header" scope="col" style="width: 7%;">No. of Requests</th>
+            <th class="t-header" scope="col" style="width: 15%;">Action</th>
         </tr>
         </thead>
         
@@ -45,6 +47,8 @@
                 <td>{{ service.description }}</td>
                 <td>{{ service.price }}</td>
                 <td>{{ service.time_required }}</td>
+                <td>{{ service.service_professionals | length }}</td>
+                <td>{{ service.service_requests | length }}</td>
                 <td>
                     <a href="{{ url_for('edit_service', service_id=service.id) }}" class="btn mr-1 mb-1 btn-outline-primary btn-sm">Edit</a> 
                     <a href="{{ url_for('delete_service', service_id=service.id) }}" class="btn mb-1 btn-outline-danger btn-sm">Delete</a>
@@ -70,11 +74,11 @@
                 <th class="t-header" scope="col">Mobile</th>
                 <th class="t-header" scope="col">Address</th>
                 <th class="t-header" scope="col">Service_ID</th>
-                <th class="t-header" style="width: 3%;" scope="col">Experience (In Years)</th>
                 <th class="t-header" scope="col">Identity-Proof</th>
                 <th class="t-header" scope="col">Certification(s)</th>
+                <th class="t-header" scope="col">Number of Requests</th>
                 <th class="t-header" scope="col">Approval Status</th>
-                <th class="t-header" style="width: 15%;" scope="col">Action</th>
+                <th class="t-header" style="width: 10%;" scope="col">Action</th>
             </tr>
             </thead>
             
@@ -89,7 +93,6 @@
                     <td>{{ prof.phone }}</td>
                     <td>{{ prof.address }}<br>Pincode: {{ prof.pincode }}</td>
                     <td>{{ prof.service_id }}</td>
-                    <td>{{ prof.experience }}</td>
                     <td><a href="{{ url_for('static', filename=prof.identity_proof.split('static/')[1]) }}" target="_blank">View ID Proof</a></td>
                     <td>
                         {% if prof.certifications != None %}
@@ -97,6 +100,10 @@
                         {% else %}
                             No certifications uploaded
                         {% endif %}
+                        <small>Experience: {{ prof.experience }} years</small>
+                    </td>
+                    <td>
+                        {{ prof.requests | length }}
                     </td>
                     <td>
                         {% if prof.is_approved %}
@@ -134,6 +141,8 @@
                 <th class="t-header" scope="col">Name</th>
                 <th class="t-header" scope="col">Mobile</th>
                 <th class="t-header" scope="col">Address</th>
+                <th class="t-header" scope="col">No. of Requests</th>
+                <th class="t-header" scope="col">No. of Reviews</th>
                 <th class="t-header" scope="col">Action</th>
             </tr>
             </thead>
@@ -145,6 +154,8 @@
                     <td>{{ customer.name }}</td>
                     <td>{{ customer.phone }}</td>
                     <td>{{ customer.address }}<br>Pincode: {{ customer.pincode }}</td>
+                    <td>{{ customer.requests | length }}</td>
+                    <td>{{ customer.requests.review | length }}</td>
                     <td>
                         {% if customer.user_id not in blockedUsers %}
                             <a href="{{ url_for('block_user', user_id=customer.user_id) }}" class="btn mb-1 btn-outline-danger">Block</a>

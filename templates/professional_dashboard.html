@@ -1,22 +1,236 @@
 {% extends "layout2.html" %}
+
 {% block navbar %}
 <ul class="nav nav-underline">
     <li class="nav-item">
-        <a class="nav-link active" style="color:white;" href="#">Home</a>
+        <a class="nav-link active" style="color:white;" href="{{ url_for('home') }}">Home</a>
     </li>
+    {% if not blocked %}
     <li class="nav-item">
-        <a class="nav-link" href="#">Search</a>
+        <a class="nav-link" href="{{ url_for('search') }}">Search</a>
     </li>
     <li class="nav-item">
         <a class="nav-link" href="#">Summary</a>
+    </li>
+    {% endif %}
+    <li class="nav-item">
+        <a href="{{ url_for('profile') }}" class="nav-link">Profile</a>
     </li>
     <li class="nav-item">
         <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
     </li>
 </ul>
 {% endblock navbar %}
+{% block dashboard_message %}
+DASHBOARD
+{% endblock dashboard_message %}
+
 
 {% block content %}
-    
+{% if blocked %}
+<div class="alert alert-danger fade show" role="alert">
+    Your account has been blocked. Please contact the administrator at <a
+        href="mailto:admin.homeease@homeease.com">admin.homeease@homeease.com</a>.
+</div>
+{% elif not user.is_approved %}
+<div class="alert alert-warning fade show" role="alert">
+    Your account is not approved yet. Please wait for the administrator to approve your account.
+</div>
+<div class="container  table-responsive">
+    <h3 class="page-headings py-2">Open Requests</h3>
+    <table class="table table-hover align-middle">
+        <thead class="align-middle">
+            <tr class="table-primary">
+                <th class="t-header" scope="col">Request ID</th>
+                <th class="t-header" scope="col">Customer Name</th>
+                <th class="t-header" scope="col">Mobile No.</th>
+                <th class="t-header" scope="col">Address</th>
+                <th class="t-header" scope="col">Date of Request</th>
+                <th class="t-header" scope="col">Remarks</th>
+                <th class="t-header" scope="col" style="width: 15%;">Action</th>
+            </tr>
+        </thead>
+
+        <tbody class="table-group-divider">
+            {% for req in new_requests %}
+            <tr>
+                <td scope="row">{{ req.id }}</td>
+                <td>{{ req.customer.name }}</td>
+                <td>{{ req.customer.phone }}</td>
+                <td>{{ req.customer.address }}<br>Pincode: {{ req.pincode }}</td>
+                <td>{{ req.date_of_request | utc_to_local }}</td>
+                <td>{{ req.remarks }}</td>
+                <td>
+                    <a href=""
+                        class="btn mr-1 mb-1 btn-outline-success btn-sm disabled">Accept</a>
+                    <a href="" class="btn mb-1 btn-outline-danger btn-sm disabled">Reject</a>
+                    <div><small>You can accept/reject requests once you're approved.</small></div>
+                </td>
+            </tr>
+
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="container  table-responsive">
+    <h3 class="page-headings py-2">Open Requests</h3>
+    <table class="table table-hover align-middle">
+        <thead class="align-middle">
+            <tr class="table-primary">
+                <th class="t-header" scope="col">Request ID</th>
+                <th class="t-header" scope="col">Customer Name</th>
+                <th class="t-header" scope="col">Mobile No.</th>
+                <th class="t-header" scope="col">Address</th>
+                <th class="t-header" scope="col">Date of Request</th>
+                <th class="t-header" scope="col">Remarks</th>
+                <th class="t-header" scope="col" style="width: 15%;">Action</th>
+            </tr>
+        </thead>
+
+        <tbody class="table-group-divider">
+        {% set flag=True %}
+        {% for req in new_requests %}
+        {% for rejected in user.rejected_requests %}
+            {% if req.id != rejected.service_request_id %}
+                {% set flag=False %}
+            <tr>
+                <td scope="row">{{ req.id }}</td>
+                <td>{{ req.customer.name }}</td>
+                <td>{{ req.customer.phone }}</td>
+                <td>{{ req.customer.address }}<br>Pincode: {{ req.pincode }}</td>
+                <td>{{ req.date_of_request | utc_to_local }}</td>
+                <td>{{ req.remarks }}</td>
+                <td>
+                    <a href="{{ url_for('accept_request',request_id=req.id) }}" class="btn mr-1 mb-1 btn-outline-success btn-sm">Accept</a>
+                    <a href="{{ url_for('reject_request',request_id=req.id) }}" class="btn mb-1 btn-outline-danger btn-sm">Reject</a>
+                </td>
+            </tr>
+            {% endif %}
+        {% endfor %}
+        {% endfor %}
+        {% if flag %}
+        <tr>
+            <td colspan="7" class="text-center">No new open requests</td>
+        </tr>
+        {% endif %}
+        </tbody>
+    </table>
+</div>
+
+<div class="container  table-responsive">
+    <h3 class="page-headings py-2">Your Requests</h3>
+    <table class="table table-hover align-middle">
+        <thead class="align-middle">
+            <tr class="table-primary">
+                <th class="t-header" scope="col">Request ID</th>
+                <th class="t-header" scope="col">Customer Name</th>
+                <th class="t-header" scope="col">Mobile No.</th>
+                <th class="t-header" scope="col">Address</th>
+                <th class="t-header" scope="col">Date of Request</th>
+                <th class="t-header" scope="col">Remarks</th>
+                <th class="t-header" scope="col" style="width: 18%;">Status</th>
+            </tr>
+        </thead>
+
+        <tbody class="table-group-divider">
+        {% for req in prev_requests %}
+            <tr>
+                <td scope="row">{{ req.id }}</td>
+                <td>{{ req.customer.name }}</td>
+                <td>{{ req.customer.phone }}</td>
+                <td>{{ req.customer.address }}<br>Pincode: {{ req.pincode }}</td>
+                <td>{{ req.date_of_request | utc_to_local }}</td>
+                <td>{{ req.remarks }}</td>
+                <td>
+                    {% if req.service_status == 'accepted' %}
+                    <a href="{{ url_for('in_progress',request_id=req.id) }}" class="btn btn-outline-info">Mark as In Progress</a>
+                    {% elif req.service_status == 'in progress' %}
+                    <a class="btn btn-info disabled">In Progress</a>
+                    {% elif req.service_status == 'closed' %}
+                    <a class="btn btn-success disabled">Closed</a>
+                    {% endif %}    
+                </td>
+            </tr>
+
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endif %}
+
+
+    <!-- MODALS -->
+    <!-- Modal for accepting request -->
+    {% if accept_request %}                    
+    <div class="modal show" id="acceptRequestModal" tabindex="-1" aria-labelledby="acceptRequestModalLabel" aria-hidden="true" style="display: block;">
+        <div class="modal-dialog">
+            <div class="modal-content shadow-lg custom-modal">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="acceptRequestModalLabel">Accept Request</h5>
+                    <a href="{{ url_for('dashboard') }}" class="btn-close" aria-label="Close"></a>
+                </div>
+                <form id="acceptRequestForm" method="POST" action="/accept_request">
+                    <div class="modal-body">
+                        <input type="hidden" name="id" value="{{ accept_request.id }}">
+                        <p>Are you sure you want to accept request <b>{{ accept_request.id }}</b>?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-success">Accept</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Modal for rejecting request -->
+    {% if reject_request %}
+    <div class="modal show" id="rejectRequestModal" tabindex="-1" aria-labelledby="rejectRequestModalLabel" aria-hidden="true" style="display: block;">
+        <div class="modal-dialog">
+            <div class="modal-content shadow-lg custom-modal">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="rejectRequestModalLabel">Reject Request</h5>
+                    <a href="{{ url_for('dashboard') }}" class="btn-close" aria-label="Close"></a>
+                </div>
+                <form id="rejectRequestForm" method="POST" action="/reject_request">
+                    <div class="modal-body">
+                        <input type="hidden" name="id" value="{{ reject_request.id }}">
+                        <p>Are you sure you want to reject request <b>{{ reject_request.id }}</b>?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-danger">Reject</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Modal for in_progress -->
+    {% if in_progress %}
+    <div class="modal show" id="inProgressModal" tabindex="-1" aria-labelledby="inProgressModalLabel" aria-hidden="true" style="display: block;">
+        <div class="modal-dialog">
+            <div class="modal-content shadow-lg custom-modal">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="inProgressModalLabel">Mark as In Progress</h5>
+                    <a href="{{ url_for('dashboard') }}" class="btn-close" aria-label="Close"></a>
+                </div>
+                <form id="inProgressForm" method="POST" action="/in_progress">
+                    <div class="modal-body">
+                        <input type="hidden" name="id" value="{{ in_progress.id }}">
+                        <p>Are you sure you want to mark request <b>{{ in_progress.id }}</b> as In Progress?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-success">Mark as In Progress</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+
 
 {% endblock %}

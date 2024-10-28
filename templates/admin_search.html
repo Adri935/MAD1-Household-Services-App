@@ -1,0 +1,44 @@
+{% extends "layout2.html" %}
+{% block navbar %}
+<ul class="nav nav-underline">
+    <li class="nav-item">
+        <a class="nav-link active" style="color:white;" href="{{ url_for('home') }}">Home</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('search') }}">Search</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="#">Summary</a>
+    </li>
+    <li class="nav-item">
+        <a href="{{ url_for('profile') }}" class="nav-link">Profile</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+    </li>
+</ul>
+{% endblock navbar %}
+{% block dashboard_message %}
+    SEARCH
+{% endblock dashboard_message %}
+
+{% block content %}
+    <div class="container my-4">
+        <div class="row justify-content-end">
+            <div class="col-lg-7 col-md-12">
+                <form action="{{ url_for('search') }}" method="get" class="d-flex align-items-center">
+                    <div class="input-group">
+                        <span class="m-2">Search:&nbsp;</span>
+                        <select class="form-select" name="search_type" aria-label="Search type">
+                            <option value="serviceprofessional" selected>Service Professionals</option>
+                            <option value="service">Services</option>
+                            <option value="customer">Customers</option>
+                        </select>
+                        <input type="text" class="form-control" name="search_term" placeholder="Search..." aria-label="Search">
+                        <button class="btn btn-custom" type="submit">Search</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock content %}

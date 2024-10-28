@@ -29,6 +29,9 @@ class User(db.Model,UserMixin):
     role = db.Column(db.String(20), nullable=False)
     blocked = db.Column(db.Boolean,default=False)
 
+    customers = db.relationship('Customer', backref='user', cascade='all, delete-orphan')
+    service_professionals = db.relationship('ServiceProfessional', backref='user', cascade='all, delete-orphan')
+
 class Service(db.Model):
     __tablename__ = 'service'
     id = db.Column(db.Integer, primary_key=True)
@@ -37,12 +40,15 @@ class Service(db.Model):
     description = db.Column(db.String(250))
     time_required = db.Column(db.String(50))
 
+    service_professionals = db.relationship('ServiceProfessional', backref='service', cascade='all, delete-orphan')
+    service_requests = db.relationship('ServiceRequest', backref='service', cascade='all, delete-orphan')
+
 class ServiceProfessional(db.Model):
     __tablename__ = 'service_professional'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     name = db.Column(db.String(100),nullable=True)
-    photo = db.Column(db.String(255),default="url_for('static',filename='defaultpfp.jpeg')")
+    photo = db.Column(db.String(255),default="static/defaultpfp.jpeg")
     phone = db.Column(db.String(10), nullable=False)
     service_id = db.Column(db.Integer, db.ForeignKey('service.id'), nullable=False)
     experience = db.Column(db.Integer, nullable=False)
@@ -53,8 +59,9 @@ class ServiceProfessional(db.Model):
     pincode = db.Column(db.String(6), nullable=False)
     is_approved = db.Column(db.Boolean, default=False)
 
-    user = db.relationship('User', backref='service_professionals')
-    service = db.relationship('Service', foreign_keys=[service_id], backref='service_professionals')
+    requests = db.relationship('ServiceRequest', backref='professional', cascade='all, delete-orphan')
+    reviews = db.relationship('Review', backref='professional', cascade='all, delete-orphan')
+    rejected_requests = db.relationship('RequestRejected', backref='rejected_by', cascade='all, delete-orphan')
 
 class Customer(db.Model):
     __tablename__ = 'customer'
@@ -62,11 +69,12 @@ class Customer(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     name = db.Column(db.String(100),nullable=False)
     phone = db.Column(db.String(10), nullable=False)
+    photo = db.Column(db.String(255),default="static/defaultpfp.jpeg")
     address = db.Column(db.Text, nullable=False)
     pincode = db.Column(db.String(6), nullable=False, index=True)
     date_created = db.Column(db.DateTime, default=datetime.utcnow)
 
-    user = db.relationship('User', backref='customers')
+    requests = db.relationship('ServiceRequest', backref='customer', cascade='all, delete-orphan')
 
 class ServiceRequest(db.Model):
     __tablename__ = 'service_request'
@@ -76,13 +84,19 @@ class ServiceRequest(db.Model):
     prof_id = db.Column(db.Integer, db.ForeignKey('service_professional.id'), nullable=True)
     date_of_request = db.Column(db.DateTime, default=datetime.utcnow, index=True)  
     date_of_completion = db.Column(db.DateTime, nullable=True)
+    address = db.Column(db.Text, nullable=False)
     pincode = db.Column(db.String(6), nullable=False)
     service_status = db.Column(db.String(50), default='requested')  
     remarks = db.Column(db.Text, nullable=True)  
-    
-    service = db.relationship('Service', backref='requests')
-    customer = db.relationship('Customer', backref='service_requests')
-    professional = db.relationship('ServiceProfessional', backref='service_requests')
+
+    review = db.relationship('Review', backref='request', cascade='all, delete-orphan')
+
+class RequestRejected(db.Model):
+    __tablename__ = 'request_rejected'
+    id = db.Column(db.Integer, primary_key=True)
+    service_request_id = db.Column(db.Integer, db.ForeignKey('service_request.id'), nullable=False)
+    prof_id = db.Column(db.Integer, db.ForeignKey('service_professional.id'))
+
 
 class Review(db.Model):
     __tablename__ = 'review'
@@ -94,9 +108,6 @@ class Review(db.Model):
     review_text = db.Column(db.Text, nullable=True)  
     date_submitted = db.Column(db.DateTime, default=datetime.utcnow)  
 
-    service_request = db.relationship('ServiceRequest', backref='reviews')
-    customer = db.relationship('Customer', backref='reviews')
-    professional = db.relationship('ServiceProfessional', backref='reviews')
 
 
 with app.app_context():
