@@ -51,10 +51,15 @@
                     <div class="input-group">
                         <span class="m-2">Search:&nbsp;</span>
                         <select class="form-select" name="search_by" aria-label="Search by">
-                            <option value="name" selected>Name</option>
-                            <option value="price">Base price is lower than</option>
+                            {% if search_by == 'price' %}
+                                <option value="name">Name</option>
+                                <option value="price" selected>Base price is lower than</option>
+                            {% else %}
+                                <option value="name" selected>Name</option>
+                                <option value="price">Base price is lower than</option>
+                            {% endif %}
                         </select>
-                        <input type="text" class="form-control" name="search_term" placeholder="Search..." aria-label="Search">
+                            <input type="text" class="form-control" name="search_term" placeholder="Search..." value="{{ search_term }}" aria-label="Search">
                         <button class="btn btn-custom" type="submit">Search</button>
                     </div>
                 </form>

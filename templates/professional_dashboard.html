@@ -46,7 +46,7 @@ DASHBOARD
                 <th class="t-header" scope="col">Mobile No.</th>
                 <th class="t-header" scope="col">Address</th>
                 <th class="t-header" scope="col">Date of Request</th>
-                <th class="t-header" scope="col">Remarks</th>
+                <th class="t-header" scope="col" style="width: 15%;">Remarks</th>
                 <th class="t-header" scope="col" style="width: 15%;">Action</th>
             </tr>
         </thead>
@@ -83,17 +83,20 @@ DASHBOARD
                 <th class="t-header" scope="col">Mobile No.</th>
                 <th class="t-header" scope="col">Address</th>
                 <th class="t-header" scope="col">Date of Request</th>
-                <th class="t-header" scope="col">Remarks</th>
+                <th class="t-header" scope="col" style="width: 15%;">Remarks</th>
                 <th class="t-header" scope="col" style="width: 15%;">Action</th>
             </tr>
         </thead>
 
         <tbody class="table-group-divider">
-        {% set flag=True %}
-        {% for req in new_requests %}
-        {% for rejected in user.rejected_requests %}
-            {% if req.id != rejected.service_request_id %}
-                {% set flag=False %}
+
+        {% if not new_requests %}
+        <tr>
+            <td colspan="7" class="text-center">No new open requests</td>
+        </tr>
+        {% else %}
+        {% set ns = namespace(count = 0) %}
+        {% for req in new_requests if req.id not in rejected_requests %}
             <tr>
                 <td scope="row">{{ req.id }}</td>
                 <td>{{ req.customer.name }}</td>
@@ -106,13 +109,13 @@ DASHBOARD
                     <a href="{{ url_for('reject_request',request_id=req.id) }}" class="btn mb-1 btn-outline-danger btn-sm">Reject</a>
                 </td>
             </tr>
-            {% endif %}
+            {% set ns.count = 1 %}
         {% endfor %}
-        {% endfor %}
-        {% if flag %}
+        {% if ns.count == 0 %}
         <tr>
             <td colspan="7" class="text-center">No new open requests</td>
         </tr>
+        {% endif %}
         {% endif %}
         </tbody>
     </table>
@@ -129,11 +132,16 @@ DASHBOARD
                 <th class="t-header" scope="col">Address</th>
                 <th class="t-header" scope="col">Date of Request</th>
                 <th class="t-header" scope="col">Remarks</th>
-                <th class="t-header" scope="col" style="width: 18%;">Status</th>
+                <th class="t-header" scope="col" style="width: 17%;">Status</th>
             </tr>
         </thead>
 
         <tbody class="table-group-divider">
+        {% if not prev_requests %}
+        <tr>
+            <td colspan="7" class="text-center">No previous requests</td>
+        </tr>
+        {% else %}
         {% for req in prev_requests %}
             <tr>
                 <td scope="row">{{ req.id }}</td>
@@ -147,13 +155,55 @@ DASHBOARD
                     <a href="{{ url_for('in_progress',request_id=req.id) }}" class="btn btn-outline-info">Mark as In Progress</a>
                     {% elif req.service_status == 'in progress' %}
                     <a class="btn btn-info disabled">In Progress</a>
-                    {% elif req.service_status == 'closed' %}
+                    {% elif req.service_status == 'completed' %}
                     <a class="btn btn-success disabled">Closed</a>
+                    <span class="badge bg-success rounded-pill">☆ {{ req.review[0].rating }} Rating</span>
                     {% endif %}    
                 </td>
             </tr>
 
         {% endfor %}
+        {% endif %}
+        </tbody>
+    </table>
+</div>
+
+<div class="container  table-responsive">
+    <h3 class="page-headings py-2">Your Reviews</h3>
+    <table class="table table-hover align-middle">
+        <thead class="align-middle">
+            <tr class="table-primary">
+                <th class="t-header" scope="col">Review ID</th>
+                <th class="t-header" scope="col">Customer Name</th>
+                <th class="t-header" scope="col">Date of Request</th>
+                <th class="t-header" scope="col">Date of Completion</th>
+                <th class="t-header" scope="col">Rating</th>
+                <th class="t-header" scope="col">Review</th>
+                <th class="t-header" scope="col" style="width: 15%;">Action</th>
+            </tr>
+        </thead>
+
+        <tbody class="table-group-divider">
+        {% if not reviews %}
+        <tr>
+            <td colspan="7" class="text-center">No reviews yet</td>
+        </tr>
+        {% else %}
+        {% for review in reviews %}
+            <tr>
+                <td scope="row">{{ review.id }}</td>
+                <td>{{ review.request.customer.name }}</td>
+                <td>{{ review.request.date_of_request | utc_to_local }}</td>
+                <td>{{ review.request.date_of_completion | utc_to_local }}</td>
+                <td><span style="color: #ffc400;">&#9733;</span> {{ review.rating }}.0</td>
+                <td>{{ review.review_text }}</td>
+                <td>
+                    <a href="{{ url_for('report_customer',customer_id=review.customer_id)}}" class="btn btn-outline-danger">Report Customer</a>
+                </td>
+            </tr>
+
+        {% endfor %}
+        {% endif %}
         </tbody>
     </table>
 </div>
@@ -224,6 +274,32 @@ DASHBOARD
                     </div>
                     <div class="modal-footer">
                         <button type="submit" class="btn btn-success">Mark as In Progress</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Modal for report customer -->
+    {% if report_customer %}
+    <div class="modal show" id="reportCustomerModal" tabindex="-1" aria-labelledby="reportCustomerModalLabel" aria-hidden="true" style="display: block;">
+        <div class="modal-dialog">
+            <div class="modal-content shadow-lg custom-modal">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="reportCustomerModalLabel">Report Customer</h5>
+                    <a href="{{ url_for('dashboard') }}" class="btn-close" aria-label="Close"></a>
+                </div>
+                <form id="reportCustomerForm" method="POST" action="/report_customer">
+                    <div class="modal-body">
+                        <input type="hidden" name="id" value="{{ report_customer.id }}">
+                        <p>Are you sure you want to report customer <b>{{ report_customer.name }}</b>?</p>
+                        <p>WARNING: <i>This action cannot be undone.</i></p>
+                        <label for="remarks">Please explain why you are reporting this customer:</label>
+                        <textarea class="form-control" id="remarks" name="remarks" rows="2" required></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-danger">Report Customer</button>
                     </div>
                 </form>
             </div>

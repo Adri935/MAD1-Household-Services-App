@@ -5,12 +5,14 @@
     <li class="nav-item">
         <a class="nav-link" href="{{ url_for('dashboard') }}">Home</a>
     </li>
+    {% if not blocked %}
     <li class="nav-item">
         <a class="nav-link" href="{{ url_for('search') }}">Search</a>
     </li>
     <li class="nav-item">
         <a class="nav-link" href="#">Summary</a>
     </li>
+    {% endif %}
     <li class="nav-item">
         <a href="{{ url_for('profile') }}" class="nav-link active" style="color:white;">Profile</a>
     </li>
@@ -47,14 +49,20 @@
                                 Admin
                         {% endif %}
                     </h1>
+                    {% if current_user.role!='admin' %}
                     {% if user.user.role == 'professional' %}
                         <small>
                         {% if user.is_approved %}
                             <span class="badge rounded-pill bg-success">Approved Professional</span>
+                            {% if rating %}
+                            | <span class="text-secondary">Average Rating: &#9733; {{ rating }}</span>
+                            {% endif %}
                         {% else %}
                             <span class="badge rounded-pill bg-warning">Pending Approval</span>
                         {% endif %}
+                        
                         </small>
+                    {% endif %}
                     {% endif %}
                     <p class="text-secondary">
                         {% if user.role == 'admin' %}

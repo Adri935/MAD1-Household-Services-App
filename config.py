@@ -15,7 +15,7 @@ def utc_to_local(time):
     local_time = utc_time.astimezone(ZoneInfo('Asia/Kolkata'))
     
     # Return the formatted local time using strftime
-    return datetime.strftime(local_time,'%d-%m-%Y %H:%M:%S')
+    return datetime.strftime(local_time,'%d-%m-%Y %I:%M %p')
 
 app.jinja_env.filters['utc_to_local'] = utc_to_local
 

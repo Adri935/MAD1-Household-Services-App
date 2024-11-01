@@ -143,6 +143,7 @@
                 <th class="t-header" scope="col">Address</th>
                 <th class="t-header" scope="col">No. of Requests</th>
                 <th class="t-header" scope="col">No. of Reviews</th>
+                <th class="t-header" scope="col">No. of Reports</th>
                 <th class="t-header" scope="col">Action</th>
             </tr>
             </thead>
@@ -155,7 +156,14 @@
                     <td>{{ customer.phone }}</td>
                     <td>{{ customer.address }}<br>Pincode: {{ customer.pincode }}</td>
                     <td>{{ customer.requests | length }}</td>
-                    <td>{{ customer.requests.review | length }}</td>
+                    <td>{{ customer.reviews | length }}</td>
+                    <td>
+                        {% if customer.reports|length > 0 %}
+                            <a href="{{ url_for('view_reports',customer_id=customer.id)}}">{{ customer.reports | length }}</a>
+                        {% else %}
+                            {{ customer.reports | length }}
+                        {% endif %}
+                    </td>
                     <td>
                         {% if customer.user_id not in blockedUsers %}
                             <a href="{{ url_for('block_user', user_id=customer.user_id) }}" class="btn mb-1 btn-outline-danger">Block</a>
@@ -338,4 +346,32 @@
     </div>
     </div>
     {% endif %}
+
+    <!-- View Reports Modal -->
+    {% if reports %}
+    <div class="modal show" id="viewReportsModal" tabindex="-1" aria-labelledby="viewReportsModalLabel" aria-hidden="true" style="display: block;">
+    <div class="modal-dialog">
+        <div class="modal-content shadow-lg custom-modal">
+        <div class="modal-header">
+            <h5 class="modal-title" id="viewReportsModalLabel">Reports</h5>
+            <a href="{{ url_for('dashboard') }}" class="btn-close" aria-label="Close"></a>
+        </div>
+        
+        <div class="modal-body">
+            <ul class="list-group">
+                {% for report in reports %}
+                    <li class="list-group-item">
+                        <p><b>Report ID:</b> {{ report.id }}</p>
+                        <p><b>Customer Name:</b> {{ report.customer.name }}</p>
+                        <p><b>Reported by:</b> {{ report.professional.name }} (User ID: {{ report.professional.user_id}})</p>
+                        <p><b>Reason:</b> {{ report.remarks }}</p>
+                        <p><b>Reported at:</b> {{ report.date_submitted | utc_to_local }}</p>
+                    </li>  
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    </div>
+    {% endif %}
+
 {% endblock %}

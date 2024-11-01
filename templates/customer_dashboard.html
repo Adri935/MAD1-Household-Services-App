@@ -5,12 +5,14 @@
     <li class="nav-item">
         <a class="nav-link active" style="color:white;" href="{{ url_for('home') }}">Home</a>
     </li>
+    {% if not blocked %}
     <li class="nav-item">
         <a class="nav-link" href="{{ url_for('services') }}">Services</a>
     </li>
     <li class="nav-item">
         <a class="nav-link" href="{{ url_for('search') }}">Search</a>
     </li>
+    {% endif %}
     {% if current_user.is_authenticated %}
     {% if not blocked %}
     <li class="nav-item">
@@ -164,7 +166,7 @@ DASHBOARD
                     </td>
                     {% set flag=True %}
                     {% if request.prof_id %}
-                    <td>{{ request.professional.name }}</td>
+                    <td><a href="{{ url_for('professional_details',prof_id=request.prof_id)}}">{{ request.professional.name }}</a></td>
                     <td>{{ request.professional.phone }}</td>
                     {% set flag=False %}
                     {% endif %}
@@ -184,14 +186,15 @@ DASHBOARD
                     </td>
                     <td>
                         {% if request.service_status == 'requested' %}
-                        <a href="" class="btn btn-sm mb-1 btn-outline-danger">Cancel</a>
+                        <a href="{{ url_for('cancel_request',request_id=request.id) }}" class="btn btn-sm mb-1 btn-outline-danger">Cancel</a>
                         <a href="" class="btn btn-sm mb-1 btn-outline-primary disabled">Requested</a>
                         {% elif request.service_status == 'accepted' %}
                         <a href="" class="btn btn-sm mb-1 btn-outline-success disabled">Accepted</a>
                         {% elif request.service_status == 'in progress' %}
-                        <a href="" class="btn btn-sm mb-1 btn-outline-primary">Close Request</a>
+                        <a href="{{ url_for('close_request',request_id=request.id) }}" class="btn btn-sm mb-1 btn-outline-primary">Close Request</a>
                         {% elif request.service_status == 'completed' %}
-                        <a href="" class="btn mb-1 btn-outline-success disabled">Completed</a>
+                        <a href="" class="btn mb-1 btn-success disabled">Completed</a>
+                        <a href="{{ url_for('edit_review',request_id=request.id) }}">Edit Review</a>
                         {% endif %}
                     </td>
                 </tr>
@@ -207,6 +210,7 @@ DASHBOARD
     {% endif %}
 
     <!-- MODALS -->
+    <!-- Edit remarks Modal -->
     {% if edit_remarks %}
     <div class="modal show" id="editRemarksModal" tabindex="-1" aria-labelledby="editRemarksModalLabel"
         aria-hidden="true" style="display: block;">
@@ -231,5 +235,162 @@ DASHBOARD
             </div>
         </div>
         {% endif %}
+
+    <!-- Cancel Request -->
+    {% if cancel_request %}
+    <div class="modal show" id="cancelRequestModal" tabindex="-1" aria-labelledby="cancelRequestModalLabel"
+        aria-hidden="true" style="display: block;">
+        <div class="modal-dialog">
+            <div class="modal-content shadow-lg custom-modal">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cancelRequestModalLabel">Cancel Request</h5>
+                    <a href="{{ url_for('dashboard') }}" class="btn-close" aria-label="Close"></a>
+                </div>
+                <form id="cancelRequestForm" method="POST" action="{{ url_for('cancel_request') }}">
+                    <div class="modal-body">
+                        <input type="hidden" name="id" value="{{ cancel_request.id }}">
+                        <p>Are you sure you want to cancel your request for service <b>{{ cancel_request.service.name }}</b>?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-danger">Yes, Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- View Professional Modal -->
+    {% if view_professional %}
+        <div class="modal show" id="viewProfessionalModal" tabindex="-1" aria-labelledby="viewProfessionalModalLabel"
+            aria-hidden="true" style="display: block;">
+            <div class="modal-dialog">
+                <div class="modal-content shadow-lg custom-modal">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="viewProfessionalModalLabel">Professional Details</h5>
+                        <a href="{{ url_for('dashboard') }}" class="btn-close" aria-label="Close"></a>
+                    </div>
+                    <div class="modal-body">
+                        <p><b>Professional Name:</b> {{ view_professional.name }}</p>
+                        <p><b>Phone Number:</b> {{ view_professional.phone }}</p>
+                        <p><b>Email:</b> {{ view_professional.user.email }}</p>
+                        <p><b>Address:</b> {{ view_professional.address }}</p>
+                        <p><b>Pincode:</b> {{ view_professional.pincode }}</p>
+                        <p><b>Rating:</b> 
+                            {% if rating %}
+                            <span class="badge bg-success rounded-pill">
+                                ☆ {{ rating }}
+                            </span>
+                            {% else %}
+                                Not rated yet
+                            {% endif %}
+                            
+                        </p>
+                        {% if reviews %}
+                        <p><b>Reviews:</b></p>
+                        <ul class="list-group">
+                            {% for review in reviews %}
+                            <li class="list-group-item">
+                                <h6>{{ review.request.customer.name }}</h6>
+                                <div>
+                                <small>
+                                <span class="badge bg-success rounded-pill">
+                                    ☆ {{ review.rating }}
+                                </span> <span class="text-secondary">{{ review.date_submitted | utc_to_local }}</span></small>
+                                </div>
+                                <small>
+                                {{ review.review_text }}
+                                </small>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!--Close Request Modal -->
+        {% if close_request %}
+        <div class="modal show" id="closeRequestModal" tabindex="-1" aria-labelledby="closeRequestModalLabel"
+            aria-hidden="true" style="display: block;">
+            <div class="modal-dialog">
+                <div class="modal-content shadow-lg custom-modal">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="closeRequestModalLabel">Close Request</h5>
+                        <a href="{{ url_for('dashboard') }}" class="btn-close" aria-label="Close"></a>
+                    </div>
+                    <form id="closeRequestForm" method="POST" action="{{ url_for('close_request') }}">
+                        <div class="modal-body">
+                            <input type="hidden" name="id" value="{{ close_request.id }}">
+                            <p>You are closing the request for service <b>{{ close_request.service.name }}</b>.</p>
+
+                            <h5 class="page-headings">Tell us about your experience!</h5>
+                            <b><label for="rating">Rating:</label></b>
+                            <div class="rating">
+                                <input id="star5" name="star" type="radio" value="5" class="radio-btn hide" />
+                                <label for="star5">☆</label>
+                                <input id="star4" name="star" type="radio" value="4" class="radio-btn hide" />
+                                <label for="star4">☆</label>
+                                <input id="star3" name="star" type="radio" value="3" class="radio-btn hide" />
+                                <label for="star3">☆</label>
+                                <input id="star2" name="star" type="radio" value="2" class="radio-btn hide" />
+                                <label for="star2">☆</label>
+                                <input id="star1" name="star" type="radio" value="1" class="radio-btn hide" />
+                                <label for="star1">☆</label>
+                            </div><br>
+                            <b><label for="review">Review:</label></b>
+                            <textarea class="form-control" id="review" name="review" rows="2" placeholder="Write your review (Optional)"></textarea>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-success">Close Request</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Edit Review -->
+        {% if edit_review %}
+        <div class="modal show" id="editReviewModal" tabindex="-1" aria-labelledby="editReviewModalLabel"
+            aria-hidden="true" style="display: block;">
+            <div class="modal-dialog">
+                <div class="modal-content shadow-lg custom-modal">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editReviewModalLabel">Edit Review</h5>
+                        <a href="{{ url_for('dashboard') }}" class="btn-close" aria-label="Close"></a>
+                    </div>
+                    <form id="editReviewForm" method="POST" action="{{ url_for('edit_review') }}">
+                        <div class="modal-body">
+                            <input type="hidden" name="id" value="{{ edit_review.id }}">
+                            <p>You are editing review for service <b>{{ edit_review.request.service.name }}</b>.</p>
+                            <b><label for="rating">Rating:</label></b>
+                            <div class="rating">
+                                <input id="star5" name="star" type="radio" value="5" class="radio-btn hide" />
+                                <label for="star5">☆</label>
+                                <input id="star4" name="star" type="radio" value="4" class="radio-btn hide" />
+                                <label for="star4">☆</label>
+                                <input id="star3" name="star" type="radio" value="3" class="radio-btn hide" />
+                                <label for="star3">☆</label>
+                                <input id="star2" name="star" type="radio" value="2" class="radio-btn hide" />
+                                <label for="star2">☆</label>
+                                <input id="star1" name="star" type="radio" value="1" class="radio-btn hide" />
+                                <label for="star1">☆</label>
+                            </div><br>
+                            <label for="review">Review:</label>
+                            <textarea class="form-control" id="review" name="review" rows="2">{{ edit_review.review_text }}</textarea>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-success">Save</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+                            
 
         {% endblock %}
