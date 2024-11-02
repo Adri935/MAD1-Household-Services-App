@@ -1,0 +1,148 @@
+{% extends "layout2.html" %}
+
+{% block navbar %}
+<ul class="nav nav-underline">
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('home') }}">Home</a>
+    </li>
+    {% if not blocked %}
+    <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle active" style="color:white;" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Search</a>
+        <ul class="dropdown-menu custom-dropdown">
+            <li><a class="dropdown-item" href="{{ url_for('search_new_requests') }}">New Requests</a></li>
+            {% if user.is_approved %}
+            <li><a class="dropdown-item" style="background-color: rgba(0, 187, 140, 0.856); color:white; text-decoration: underline;" href="{{ url_for('search_your_requests')}}">Your Requests</a></li>
+            {% endif %}
+        </ul>
+    </li>
+        
+    <li class="nav-item">
+        <a class="nav-link" href="#">Summary</a>
+    </li>
+    {% endif %}
+    <li class="nav-item">
+        <a href="{{ url_for('profile') }}" class="nav-link">Profile</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+    </li>
+</ul>
+{% endblock navbar %}
+{% block dashboard_message %}
+    SEARCH
+{% endblock dashboard_message %}
+
+
+{% block content %}
+    {% if blocked %}
+    <div class="alert alert-danger fade show" role="alert">
+        Your account has been blocked. Please contact the administrator at <a href="mailto:admin.homeease@homeease.com">admin.homeease@homeease.com</a>.
+    </div>
+    {% else %}
+
+    <div class="container my-4">
+        <div class="row justify-content-end">
+            <div class="col-lg-7 col-md-12">
+                <form action="{{ url_for('search_your_requests') }}" method="get" class="d-flex align-items-center">
+                    <div class="input-group">
+                        <span class="m-2">Search:&nbsp;</span>
+                        <select class="form-control form-select" name="search_by" aria-label="Search by">
+                            {% if search_by == 'date' %}
+                                <option value="date" selected>Date (YYYY-MM-DD)</option>
+                            {% else %}
+                                <option value="date">Date (YYYY-MM-DD)</option>
+                            {% endif %}
+                            {% if search_by == 'city' %}
+                                <option value="city" selected>City/Address</option>
+                            {% else %}
+                                <option value="city">City/Address</option>
+                            {% endif %}
+                            {% if search_by == 'pincode' %}
+                                <option value="pincode" selected>Pincode</option>
+                            {% else %}
+                                <option value="pincode">Pincode</option>
+                            {% endif %}
+                        </select>
+                            <input type="text" class="form-control" name="search_term" placeholder="Search..." value="{{ search_term }}" aria-label="Search">
+                        <button class="btn btn-custom" type="submit">Search</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="container  table-responsive">
+        <h3 class="page-headings py-2">Your Requests</h3>
+        <table class="table table-hover align-middle">
+            <thead class="align-middle">
+                <tr class="table-primary">
+                    <th class="t-header" scope="col">Request ID</th>
+                    <th class="t-header" scope="col">Customer Name</th>
+                    <th class="t-header" scope="col">Mobile No.</th>
+                    <th class="t-header" scope="col">Address</th>
+                    <th class="t-header" scope="col">Date of Request</th>
+                    <th class="t-header" scope="col">Remarks</th>
+                    <th class="t-header" scope="col" style="width: 17%;">Status</th>
+                </tr>
+            </thead>
+    
+            <tbody class="table-group-divider">
+            {% if not prev_requests %}
+            <tr>
+                <td colspan="7" class="text-center">No previous requests</td>
+            </tr>
+            {% else %}
+            {% for req in prev_requests %}
+                <tr>
+                    <td scope="row">{{ req.id }}</td>
+                    <td>{{ req.customer.name }}</td>
+                    <td>{{ req.customer.phone }}</td>
+                    <td>{{ req.customer.address }}<br>Pincode: {{ req.pincode }}</td>
+                    <td>{{ req.date_of_request | utc_to_local }}</td>
+                    <td>{{ req.remarks }}</td>
+                    <td>
+                        {% if req.service_status == 'accepted' %}
+                        <a href="{{ url_for('search_your_requests_in_progress',request_id=req.id) }}" class="btn btn-outline-info">Mark as In Progress</a>
+                        {% elif req.service_status == 'in progress' %}
+                        <a class="btn btn-info disabled">In Progress</a>
+                        {% elif req.service_status == 'completed' %}
+                        <a class="btn btn-success disabled">Closed</a>
+                        <span class="badge bg-success rounded-pill">☆ {{ req.review[0].rating }} Rating</span>
+                        {% endif %}    
+                    </td>
+                </tr>
+    
+            {% endfor %}
+            {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    <!--MODALs-->
+    <!-- Modal for in_progress -->
+    {% if in_progress %}
+    <div class="modal show" id="inProgressModal" tabindex="-1" aria-labelledby="inProgressModalLabel" aria-hidden="true" style="display: block;">
+        <div class="modal-dialog">
+            <div class="modal-content shadow-lg custom-modal">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="inProgressModalLabel">Mark as In Progress</h5>
+                    <a href="{{ url_for('search_your_requests') }}" class="btn-close" aria-label="Close"></a>
+                </div>
+                <form id="inProgressForm" method="POST" action="{{ url_for('search_your_requests_in_progress') }}">
+                    <div class="modal-body">
+                        <input type="hidden" name="id" value="{{ in_progress.id }}">
+                        <p>Are you sure you want to mark request <b>{{ in_progress.id }}</b> as In Progress?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-success">Mark as In Progress</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% endif %}
+
+{% endblock content %}

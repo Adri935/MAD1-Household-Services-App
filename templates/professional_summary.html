@@ -6,9 +6,16 @@
         <a class="nav-link" href="{{ url_for('home') }}">Home</a>
     </li>
     {% if not blocked %}
-    <li class="nav-item">
-        <a class="nav-link active" style="color:white;" href="{{ url_for('search') }}">Search</a>
+    <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle active" style="color:white;" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Search</a>
+        <ul class="dropdown-menu custom-dropdown">
+            <li><a class="dropdown-item" style="background-color: rgba(0, 187, 140, 0.856); color:white; text-decoration: underline;" href="{{ url_for('search_new_requests') }}">New Requests</a></li>
+            {% if user.is_approved %}
+            <li><a class="dropdown-item" href="{{ url_for('search_your_requests')}}">Your Requests</a></li>
+            {% endif %}
+        </ul>
     </li>
+        
     <li class="nav-item">
         <a class="nav-link" href="#">Summary</a>
     </li>
@@ -31,10 +38,11 @@
     <div class="alert alert-danger fade show" role="alert">
         Your account has been blocked. Please contact the administrator at <a href="mailto:admin.homeease@homeease.com">admin.homeease@homeease.com</a>.
     </div>
+    {% elif not user.is_approved %}
+    <div class="alert alert-warning fade show" role="alert">
+        Your account is not approved yet. Please wait for the administrator to approve your account to view your stats.
+    </div>
     {% else %}
-
+    
     {% endif %}
-    
-    
-
-{% endblock %}
+{% endblock content %}

@@ -179,13 +179,14 @@ def dashboard():
         return render_template('admin_dashboard.html',title='Admin Dashboard',services=services, customers=customers, professionals=professionals, blockedUsers=[user.id for user in User.query.filter_by(blocked=True).all()])
     if current_user.role == 'customer':
         user = Customer.query.filter_by(user_id=current_user.id).first()        
-        requests = ServiceRequest.query.filter_by(cust_id=user.id).all()
+        requests = ServiceRequest.query.filter_by(cust_id=user.id).order_by(ServiceRequest.date_of_request.desc()).all()
         return render_template('customer_dashboard.html',title='Home', user=user, professionals=professionals, requests=requests, services=services, blocked=current_user.blocked)
     if  current_user.role == 'professional':
         user = ServiceProfessional.query.filter_by(user_id=current_user.id).first()
         new_requests = ServiceRequest.query.filter_by(service_id=user.service_id).filter_by(service_status='requested').all()
         prev_requests = ServiceRequest.query.filter_by(prof_id=user.id).order_by(ServiceRequest.date_of_request.desc()).all()
-        rejected_requests = db.session.query(RequestRejected.service_request_id).filter(RequestRejected.prof_id==user.id).first()
+        rej_requests = db.session.query(RequestRejected.service_request_id).filter(RequestRejected.prof_id==user.id).all()
+        rejected_requests = [x for (x,) in rej_requests]
         reviews = Review.query.filter_by(professional_id=user.id).order_by(Review.date_submitted.desc()).all()
         return render_template('professional_dashboard.html',title='Home', user=user, new_requests=new_requests, rejected_requests=rejected_requests, prev_requests=prev_requests, reviews=reviews, blocked=current_user.blocked)
 
@@ -537,7 +538,7 @@ def edit_review():
 def search():
     if not current_user.is_authenticated:
         search_by=request.args.get('search_by')
-        search_term=request.args.get('search_term')
+        search_term=request.args.get('search_term') or ''
         if search_by == 'name':
             services = Service.query.filter(Service.name.ilike(f'%{search_term}%')).all()
         elif search_by == 'price':
@@ -550,7 +551,7 @@ def search():
         return render_template('customer_search.html', title='Search', services=services,search_term=search_term,search_by=search_by)
     elif current_user.role == 'customer':
         search_by=request.args.get('search_by')
-        search_term=request.args.get('search_term')
+        search_term=request.args.get('search_term') or ''
         if search_by == 'name':
             services = Service.query.filter(Service.name.ilike(f'%{search_term}%')).all()
         elif search_by == 'price':
@@ -564,8 +565,122 @@ def search():
     elif current_user.role == 'admin':
         return render_template('admin_search.html', title='Search')
 
-    elif current_user.role == 'professional':
-        return render_template('professional_search.html', title='Search', blocked=current_user.blocked)
+
+@app.route('/search_new_requests')
+@login_required
+def search_new_requests():
+    if current_user.role != 'professional':
+        return redirect(url_for('dashboard'))
+    
+    user = ServiceProfessional.query.filter_by(user_id=current_user.id).first()
+    rej_requests = db.session.query(RequestRejected.service_request_id).filter(RequestRejected.prof_id==user.id).all()
+    rejected_requests = [x for (x,) in rej_requests]
+    search_by = request.args.get('search_by')
+    search_term = request.args.get('search_term') or ''
+    if search_by == 'pincode':
+        if not search_term.isdigit():
+            flash('Please enter a valid pincode.','danger')
+            return redirect(url_for('search_new_requests'))
+
+        new_requests = ServiceRequest.query.filter_by(pincode=int(search_term)).filter_by(service_status='requested').order_by(ServiceRequest.date_of_request.desc()).all()
+
+    elif search_by == 'date':
+        new_requests = ServiceRequest.query.filter(func.date(ServiceRequest.date_of_request)==search_term).filter_by(service_status='requested').order_by(ServiceRequest.date_of_request.desc()).all()
+
+    elif search_by == 'city':
+        new_requests = ServiceRequest.query.filter(ServiceRequest.address.ilike(f'%{search_term}%')).filter_by(service_status='requested').order_by(ServiceRequest.date_of_request.desc()).all()
+
+    else:
+        new_requests = ServiceRequest.query.filter(ServiceRequest.service_status=='requested').order_by(ServiceRequest.date_of_request.desc()).all()
+    return render_template('professional_search1.html', title='Search', user=user, rejected_requests=rejected_requests, new_requests=new_requests, search_by=search_by, search_term=search_term, blocked=current_user.blocked)
+
+
+@app.route('/search_new_requests/accept_request', methods=['GET', 'POST'])
+def search_new_requests_accept():
+    if current_user.role != 'professional':
+        return redirect(url_for('dashboard'))
+    if request.method == 'POST':
+        request_id = request.form.get('id')
+        req = db.session.get(ServiceRequest,request_id)
+        req.prof_id = ServiceProfessional.query.filter_by(user_id=current_user.id).first().id
+        req.service_status = 'accepted'
+        db.session.commit()
+        flash('Request accepted successfully.','success')
+        return redirect(url_for('search_new_requests'))
+
+    request_id = request.args.get('request_id')
+    user = ServiceProfessional.query.filter_by(user_id=current_user.id).first()
+    new_requests = ServiceRequest.query.filter_by(service_id=user.service_id).filter_by(service_status='requested').all()
+    rej_requests = db.session.query(RequestRejected.service_request_id).filter(RequestRejected.prof_id==user.id).all()
+    rejected_requests = [x for (x,) in rej_requests]
+    req = db.session.get(ServiceRequest,request_id)
+    return render_template('professional_search1.html', title='Search', accept_request=req, user=user, new_requests=new_requests, rejected_requests=rejected_requests, blocked=current_user.blocked)
+
+@app.route('/search_new_requests/reject_request', methods=['GET', 'POST'])
+def search_new_requests_reject():
+    if current_user.role != 'professional':
+        return redirect(url_for('dashboard'))
+    if request.method == 'POST':
+        request_id = request.form.get('id')
+        prof_id = ServiceProfessional.query.filter_by(user_id=current_user.id).first().id
+        new_reject = RequestRejected(service_request_id=request_id, prof_id=prof_id)
+        db.session.add(new_reject)
+        db.session.commit()
+        flash('Request rejected successfully.','success')
+        return redirect(url_for('search_new_requests'))
+
+    request_id = request.args.get('request_id')
+    user = ServiceProfessional.query.filter_by(user_id=current_user.id).first()
+    new_requests = ServiceRequest.query.filter_by(service_id=user.service_id).filter_by(service_status='requested').all()
+    rej_requests = db.session.query(RequestRejected.service_request_id).filter(RequestRejected.prof_id==user.id).all()
+    rejected_requests = [x for (x,) in rej_requests]
+    req = db.session.get(ServiceRequest,request_id)
+    return render_template('professional_search1.html', title='Search', reject_request=req, user=user, new_requests=new_requests, rejected_requests=rejected_requests, blocked=current_user.blocked)
+
+@app.route('/search_your_requests')
+@login_required
+def search_your_requests():
+    if current_user.role != 'professional':
+        return redirect(url_for('dashboard'))
+
+    user = ServiceProfessional.query.filter_by(user_id=current_user.id).first()
+    search_by = request.args.get('search_by')
+    search_term = request.args.get('search_term') or ''
+    if search_by == 'pincode':
+        if not search_term.isdigit():
+            flash('Please enter a valid pincode.','danger')
+            return redirect(url_for('search_new_requests'))
+
+        prev_requests = ServiceRequest.query.filter_by(pincode=int(search_term)).filter_by(prof_id=user.id).order_by(ServiceRequest.date_of_request.desc()).all()
+
+    elif search_by == 'date':
+        prev_requests = ServiceRequest.query.filter(func.date(ServiceRequest.date_of_request)==search_term).filter_by(prof_id=user.id).order_by(ServiceRequest.date_of_request.desc()).all()
+
+    elif search_by == 'city':
+        prev_requests = ServiceRequest.query.filter(ServiceRequest.address.ilike(f'%{search_term}%')).filter_by(prof_id=user.id).order_by(ServiceRequest.date_of_request.desc()).all()
+
+    else:
+        prev_requests = ServiceRequest.query.filter_by(prof_id=user.id).order_by(ServiceRequest.date_of_request.desc()).all()
+    
+    return render_template('professional_search2.html', title='Search', user=user, prev_requests=prev_requests, search_term=search_term, search_by=search_by, blocked=current_user.blocked)
+
+@app.route('/search_your_requests/mark_in_progress', methods=['GET', 'POST'])
+def search_your_requests_in_progress():
+    if current_user.role != 'professional':
+        return redirect(url_for('dashboard'))
+    if request.method == 'POST':
+        request_id = request.form.get('id')
+        req = db.session.get(ServiceRequest,request_id)
+        req.service_status = 'in progress'
+        db.session.commit()
+        flash('Request status updated successfully.','success')
+        return redirect(url_for('search_your_requests'))
+
+    request_id = request.args.get('request_id')
+    user = ServiceProfessional.query.filter_by(user_id=current_user.id).first()
+    prev_requests = ServiceRequest.query.filter_by(prof_id=user.id).order_by(ServiceRequest.date_of_request.desc()).all()
+    req = db.session.get(ServiceRequest,request_id)
+    return render_template('professional_search2.html', title='Search', in_progress=req, user=user, prev_requests=prev_requests, blocked=current_user.blocked)
 
 @app.route('/book_searched_service', methods=['GET', 'POST'])
 def book_search_service():
@@ -608,7 +723,8 @@ def accept_request():
     user = ServiceProfessional.query.filter_by(user_id=current_user.id).first()
     new_requests = ServiceRequest.query.filter_by(service_id=user.service_id).filter_by(service_status='requested').all()
     prev_requests = ServiceRequest.query.filter_by(prof_id=user.id).all()
-    rejected_requests = db.session.query(RequestRejected.service_request_id).filter(RequestRejected.prof_id==user.id).first()
+    rej_requests = db.session.query(RequestRejected.service_request_id).filter(RequestRejected.prof_id==user.id).all()
+    rejected_requests = [x for (x,) in rej_requests]
     req = db.session.get(ServiceRequest,request_id)
     reviews = Review.query.filter_by(professional_id=user.id).order_by(Review.date_submitted.desc()).all()
     return render_template('professional_dashboard.html', title='Home', accept_request=req, user=user, reviews=reviews, new_requests=new_requests, rejected_requests=rejected_requests, prev_requests=prev_requests, blocked=current_user.blocked)
@@ -629,7 +745,8 @@ def reject_request():
     user = ServiceProfessional.query.filter_by(user_id=current_user.id).first()
     new_requests = ServiceRequest.query.filter_by(service_id=user.service_id).filter_by(service_status='requested').all()
     prev_requests = ServiceRequest.query.filter_by(prof_id=user.id).order_by(ServiceRequest.date_of_request.desc()).all()
-    rejected_requests = db.session.query(RequestRejected.service_request_id).filter(RequestRejected.prof_id==user.id).first()
+    rej_requests = db.session.query(RequestRejected.service_request_id).filter(RequestRejected.prof_id==user.id).all()
+    rejected_requests = [x for (x,) in rej_requests]
     req = db.session.get(ServiceRequest,request_id)
     reviews = Review.query.filter_by(professional_id=user.id).order_by(Review.date_submitted.desc()).all()
     return render_template('professional_dashboard.html', title='Home', reject_request=req, user=user, reviews=reviews, new_requests=new_requests, rejected_requests=rejected_requests, prev_requests=prev_requests, blocked=current_user.blocked)
@@ -648,7 +765,8 @@ def in_progress():
     user = ServiceProfessional.query.filter_by(user_id=current_user.id).first()
     new_requests = ServiceRequest.query.filter_by(service_id=user.service_id).filter_by(service_status='requested').all()
     prev_requests = ServiceRequest.query.filter_by(prof_id=user.id).order_by(ServiceRequest.date_of_request.desc()).all()
-    rejected_requests = db.session.query(RequestRejected.service_request_id).filter(RequestRejected.prof_id==user.id).first()
+    rej_requests = db.session.query(RequestRejected.service_request_id).filter(RequestRejected.prof_id==user.id).all()
+    rejected_requests = [x for (x,) in rej_requests]
     req = db.session.get(ServiceRequest,request_id)
     reviews = Review.query.filter_by(professional_id=user.id).order_by(Review.date_submitted.desc()).all()
     return render_template('professional_dashboard.html', title='Home', in_progress=req, user=user, reviews=reviews, new_requests=new_requests, prev_requests=prev_requests, rejected_requests=rejected_requests, blocked=current_user.blocked)
@@ -673,6 +791,7 @@ def report_customer():
     user = ServiceProfessional.query.filter_by(user_id=current_user.id).first()
     new_requests = ServiceRequest.query.filter_by(service_id=user.service_id).filter_by(service_status='requested').all()
     prev_requests = ServiceRequest.query.filter_by(prof_id=user.id).order_by(ServiceRequest.date_of_request.desc()).all()
-    rejected_requests = db.session.query(RequestRejected.service_request_id).filter(RequestRejected.prof_id==user.id).first()
+    rej_requests = db.session.query(RequestRejected.service_request_id).filter(RequestRejected.prof_id==user.id).all()
+    rejected_requests = [x for (x,) in rej_requests]
     reviews = Review.query.filter_by(professional_id=user.id).order_by(Review.date_submitted.desc()).all()
     return render_template('professional_dashboard.html', title='Home', report_customer=report_cust, user=user, reviews=reviews, new_requests=new_requests, prev_requests=prev_requests, rejected_requests=rejected_requests, blocked=current_user.blocked)

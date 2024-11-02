@@ -50,7 +50,7 @@
                 <form action="{{ url_for('search') }}" method="get" class="d-flex align-items-center">
                     <div class="input-group">
                         <span class="m-2">Search:&nbsp;</span>
-                        <select class="form-select" name="search_by" aria-label="Search by">
+                        <select class="form-control form-select" name="search_by" aria-label="Search by">
                             {% if search_by == 'price' %}
                                 <option value="name">Name</option>
                                 <option value="price" selected>Base price is lower than</option>

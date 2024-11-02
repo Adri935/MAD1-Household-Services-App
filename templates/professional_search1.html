@@ -1,0 +1,215 @@
+{% extends "layout2.html" %}
+
+{% block navbar %}
+<ul class="nav nav-underline">
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('home') }}">Home</a>
+    </li>
+    {% if not blocked %}
+    <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle active" style="color:white;" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Search</a>
+        <ul class="dropdown-menu custom-dropdown">
+            <li><a class="dropdown-item" style="background-color: rgba(0, 187, 140, 0.856); color:white; text-decoration: underline;" href="{{ url_for('search_new_requests') }}">New Requests</a></li>
+            {% if user.is_approved %}
+            <li><a class="dropdown-item" href="{{ url_for('search_your_requests')}}">Your Requests</a></li>
+            {% endif %}
+        </ul>
+    </li>
+        
+    <li class="nav-item">
+        <a class="nav-link" href="#">Summary</a>
+    </li>
+    {% endif %}
+    <li class="nav-item">
+        <a href="{{ url_for('profile') }}" class="nav-link">Profile</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+    </li>
+</ul>
+{% endblock navbar %}
+{% block dashboard_message %}
+    SEARCH
+{% endblock dashboard_message %}
+
+
+{% block content %}
+    {% if blocked %}
+    <div class="alert alert-danger fade show" role="alert">
+        Your account has been blocked. Please contact the administrator at <a href="mailto:admin.homeease@homeease.com">admin.homeease@homeease.com</a>.
+    </div>
+    {% else %}
+
+    <div class="container my-4">
+        <div class="row justify-content-end">
+            <div class="col-lg-7 col-md-12">
+                <form action="{{ url_for('search_new_requests') }}" method="get" class="d-flex align-items-center">
+                    <div class="input-group">
+                        <span class="m-2">Search:&nbsp;</span>
+                        <select class="form-control form-select" name="search_by" aria-label="Search by">
+                            {% if search_by == 'date' %}
+                                <option value="date" selected>Date (YYYY-MM-DD)</option>
+                            {% else %}
+                                <option value="date">Date (YYYY-MM-DD)</option>
+                            {% endif %}
+                            {% if search_by == 'city' %}
+                                <option value="city" selected>City/Address</option>
+                            {% else %}
+                                <option value="city">City/Address</option>
+                            {% endif %}
+                            {% if search_by == 'pincode' %}
+                                <option value="pincode" selected>Pincode</option>
+                            {% else %}
+                                <option value="pincode">Pincode</option>
+                            {% endif %}
+                        </select>
+                            <input type="text" class="form-control" name="search_term" placeholder="Search..." value="{{ search_term }}" aria-label="Search">
+                        <button class="btn btn-custom" type="submit">Search</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {% if not user.is_approved %}
+<div class="alert alert-warning fade show" role="alert">
+    Your account is not approved yet. Please wait for the administrator to approve your account.
+</div>
+<div class="container  table-responsive">
+    <h3 class="page-headings py-2">Open Requests</h3>
+    <table class="table table-hover align-middle">
+        <thead class="align-middle">
+            <tr class="table-primary">
+                <th class="t-header" scope="col">Request ID</th>
+                <th class="t-header" scope="col">Customer Name</th>
+                <th class="t-header" scope="col">Mobile No.</th>
+                <th class="t-header" scope="col">Address</th>
+                <th class="t-header" scope="col">Date of Request</th>
+                <th class="t-header" scope="col" style="width: 15%;">Remarks</th>
+                <th class="t-header" scope="col" style="width: 15%;">Action</th>
+            </tr>
+        </thead>
+
+        <tbody class="table-group-divider">
+            {% for req in new_requests %}
+            <tr>
+                <td scope="row">{{ req.id }}</td>
+                <td>{{ req.customer.name }}</td>
+                <td>{{ req.customer.phone }}</td>
+                <td>{{ req.customer.address }}<br>Pincode: {{ req.pincode }}</td>
+                <td>{{ req.date_of_request | utc_to_local }}</td>
+                <td>{{ req.remarks }}</td>
+                <td>
+                    <a href=""
+                        class="btn mr-1 mb-1 btn-outline-success btn-sm disabled">Accept</a>
+                    <a href="" class="btn mb-1 btn-outline-danger btn-sm disabled">Reject</a>
+                    <div><small>You can accept/reject requests once you're approved.</small></div>
+                </td>
+            </tr>
+
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="container  table-responsive">
+    <h3 class="page-headings py-2">Open Requests</h3>
+    <table class="table table-hover align-middle">
+        <thead class="align-middle">
+            <tr class="table-primary">
+                <th class="t-header" scope="col">Request ID</th>
+                <th class="t-header" scope="col">Customer Name</th>
+                <th class="t-header" scope="col">Mobile No.</th>
+                <th class="t-header" scope="col">Address</th>
+                <th class="t-header" scope="col">Date of Request</th>
+                <th class="t-header" scope="col" style="width: 15%;">Remarks</th>
+                <th class="t-header" scope="col" style="width: 15%;">Action</th>
+            </tr>
+        </thead>
+
+        <tbody class="table-group-divider">
+
+        {% if not new_requests %}
+        <tr>
+            <td colspan="7" class="text-center">No new open requests</td>
+        </tr>
+        {% else %}
+        {% set ns = namespace(count = 0) %}
+        {% for req in new_requests if req.id not in rejected_requests %}
+            <tr>
+                <td scope="row">{{ req.id }}</td>
+                <td>{{ req.customer.name }}</td>
+                <td>{{ req.customer.phone }}</td>
+                <td>{{ req.customer.address }}<br>Pincode: {{ req.pincode }}</td>
+                <td>{{ req.date_of_request | utc_to_local }}</td>
+                <td>{{ req.remarks }}</td>
+                <td>
+                    <a href="{{ url_for('search_new_requests_accept',request_id=req.id) }}" class="btn mr-1 mb-1 btn-outline-success btn-sm">Accept</a>
+                    <a href="{{ url_for('search_new_requests_reject',request_id=req.id) }}" class="btn mb-1 btn-outline-danger btn-sm">Reject</a>
+                </td>
+            </tr>
+            {% set ns.count = 1 %}
+        {% endfor %}
+        {% if ns.count == 0 %}
+        <tr>
+            <td colspan="7" class="text-center">No new open requests</td>
+        </tr>
+        {% endif %}
+        {% endif %}
+        </tbody>
+    </table>
+</div>
+
+
+    {% endif %}
+    {% endif %}
+
+
+    <!--MODALS-->
+    <!-- Modal for accepting request -->
+    {% if accept_request %}                    
+    <div class="modal show" id="acceptRequestModal" tabindex="-1" aria-labelledby="acceptRequestModalLabel" aria-hidden="true" style="display: block;">
+        <div class="modal-dialog">
+            <div class="modal-content shadow-lg custom-modal">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="acceptRequestModalLabel">Accept Request</h5>
+                    <a href="{{ url_for('search_new_requests') }}" class="btn-close" aria-label="Close"></a>
+                </div>
+                <form id="acceptRequestForm" method="POST" action="{{ url_for('search_new_requests_accept')}}">
+                    <div class="modal-body">
+                        <input type="hidden" name="id" value="{{ accept_request.id }}">
+                        <p>Are you sure you want to accept request <b>{{ accept_request.id }}</b>?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-success">Accept</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Modal for rejecting request -->
+    {% if reject_request %}
+    <div class="modal show" id="rejectRequestModal" tabindex="-1" aria-labelledby="rejectRequestModalLabel" aria-hidden="true" style="display: block;">
+        <div class="modal-dialog">
+            <div class="modal-content shadow-lg custom-modal">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="rejectRequestModalLabel">Reject Request</h5>
+                    <a href="{{ url_for('search_new_requests') }}" class="btn-close" aria-label="Close"></a>
+                </div>
+                <form id="rejectRequestForm" method="POST" action="{{ url_for('search_new_requests_reject') }}">
+                    <div class="modal-body">
+                        <input type="hidden" name="id" value="{{ reject_request.id }}">
+                        <p>Are you sure you want to reject request <b>{{ reject_request.id }}</b>?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-danger">Reject</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+{% endblock %}

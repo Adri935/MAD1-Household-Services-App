@@ -6,9 +6,14 @@
         <a class="nav-link active" style="color:white;" href="{{ url_for('home') }}">Home</a>
     </li>
     {% if not blocked %}
-    <li class="nav-item">
-        <a class="nav-link" href="{{ url_for('search') }}">Search</a>
+    <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Search</a>
+        <ul class="dropdown-menu custom-dropdown">
+            <li><a class="dropdown-item" href="{{ url_for('search_new_requests') }}">New Requests</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('search_your_requests') }}">Your Requests</a></li>
+        </ul>
     </li>
+        
     <li class="nav-item">
         <a class="nav-link" href="#">Summary</a>
     </li>

@@ -93,6 +93,7 @@ class ServiceRequest(db.Model):
     remarks = db.Column(db.Text, nullable=True)  
 
     review = db.relationship('Review', backref='request', cascade='all, delete-orphan')
+    rejected = db.relationship('RequestRejected', backref='request', cascade='all, delete-orphan')
 
 class RequestRejected(db.Model):
     __tablename__ = 'request_rejected'

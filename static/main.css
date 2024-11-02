@@ -69,6 +69,20 @@ html, body {
     color: white;
 }
 
+.custom-dropdown {
+    background-color: rgba(2, 197, 148, 0.945);
+    box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.322);
+}
+
+.custom-dropdown .dropdown-item {
+    color: white;
+}
+
+.custom-dropdown .dropdown-item:hover {
+    background-color: rgba(0, 179, 134, 0.856);
+    color: white;
+}
+
 .dashboard-message {
     background-color: rgba(255, 255, 255, 0.521);
     color: rgb(0, 82, 75);
