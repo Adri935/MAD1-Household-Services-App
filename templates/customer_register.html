@@ -4,6 +4,14 @@
     <li class="nav-item">
         <a class="nav-link" href="{{ url_for('home') }}">Home</a>
     </li>
+    {% if not blocked %}
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('services') }}">Services</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('search') }}">Search</a>
+    </li>
+    {% endif %}
     <li class="nav-item">
         <a class="nav-link" href="{{ url_for('login') }}">Login</a> 
     </li>

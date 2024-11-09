@@ -16,7 +16,7 @@
     {% if current_user.is_authenticated %}
     {% if not blocked %}
     <li class="nav-item">
-        <a class="nav-link" href="#">Summary</a>
+        <a class="nav-link" href="{{ url_for('summary') }}">Summary</a>
     </li>
     {% endif %}
     <li class="nav-item">
@@ -47,12 +47,12 @@ DASHBOARD
         href="mailto:admin.homeease@homeease.com">admin.homeease@homeease.com</a>.
 </div>
 {% else %}
-{% if current_user.is_authenticated %}
-<h2 class="page-headings mx-3 px-3">Welcome, {{ user.name }}!</h2>
-{% else %}
-<h2 class="page-headings mx-3 px-3">Home services at your doorstep!</h2>
-{% endif %}
 <div class="container mt-5 w-100">
+    {% if current_user.is_authenticated %}
+    <h2 class="page-headings pb-3">Welcome, {{ user.name }}!</h2>
+    {% else %}
+    <h2 class="page-headings mx-3 px-3">Home services at your doorstep!</h2>
+    {% endif %}
     <div class="row">
         <h4 class="page-headings mb-3 col-12 col-sm-6 col-lg-6">What are you looking for today?</h4>
     </div>
@@ -182,12 +182,14 @@ DASHBOARD
                         {% endif %}
                     </td>
                     <td>{{ request.remarks }} 
+                        {% if request.service_status != 'completed' %}
                         <div><a href="{{ url_for('edit_remarks',request_id=request.id) }}">Edit Remarks</a></div>
+                        {% endif %}
                     </td>
                     <td>
                         {% if request.service_status == 'requested' %}
+                        <a href="" class="btn btn-sm mb-1 btn-primary disabled">Requested</a>
                         <a href="{{ url_for('cancel_request',request_id=request.id) }}" class="btn btn-sm mb-1 btn-outline-danger">Cancel</a>
-                        <a href="" class="btn btn-sm mb-1 btn-outline-primary disabled">Requested</a>
                         {% elif request.service_status == 'accepted' %}
                         <a href="" class="btn btn-sm mb-1 btn-outline-success disabled">Accepted</a>
                         {% elif request.service_status == 'in progress' %}

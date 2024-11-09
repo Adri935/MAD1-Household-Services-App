@@ -4,11 +4,19 @@
     <li class="nav-item">
         <a class="nav-link" href="{{ url_for('home') }}">Home</a>
     </li>
+    {% if not blocked %}
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('services') }}">Services</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('search') }}">Search</a>
+    </li>
+    {% endif %}
     <li class="nav-item">
         <a class="nav-link" href="{{ url_for('login') }}">Login</a> 
     </li>
     <li class="nav-item">
-        <a class="nav-link" href="{{ url_for('customer_register') }}">Register as Customer</a>
+        <a class="nav-link  active" style="color:white;" href="{{ url_for('professional_register') }}">Register</a>
     </li>
 </ul>
 {% endblock navbar %}

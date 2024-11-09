@@ -12,11 +12,13 @@
     <li class="nav-item">
         <a class="nav-link active" style="color:white;" href="{{ url_for('search') }}">Search</a>
     </li>
-    <li class="nav-item">
-        <a class="nav-link" href="#">Summary</a>
-    </li>
     {% endif %}
     {% if current_user.is_authenticated %}
+    {% if not blocked %}
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('summary') }}">Summary</a>
+    </li>
+    {% endif %}
     <li class="nav-item">
         <a href="{{ url_for('profile') }}" class="nav-link">Profile</a>
     </li>
@@ -44,6 +46,8 @@
             Your account has been blocked. Please contact the administrator at <a href="mailto:admin.homeease@homeease.com">admin.homeease@homeease.com</a>
         </div>
     {% else %}
+    {% set se_by = search_by %}
+    {% set se_term = search_term %}
     <div class="container my-4">
         <div class="row justify-content-end">
             <div class="col-lg-7 col-md-12">
@@ -83,7 +87,7 @@
                         Estimated time required: {{ service.time_required}}
                     </div>
                     {% if current_user.is_authenticated %}
-                        <a href="{{ url_for('book_search_service', service_id=service.id) }}" class="btn btn-success w-25 my-4 align-self-center">Book Now</a>
+                        <a href="{{ url_for('book_search_service', service_id=service.id, search_term=se_term, search_by=se_by) }}" class="btn btn-success w-25 my-4 align-self-center">Book Now</a>
                     {% else %}
                         <a href="{{ url_for('login') }}" class="btn btn-success w-25 my-4 align-self-center">Login to Book</a>
                     {% endif %}
@@ -102,12 +106,14 @@
 
     <!-- MODALS -->
     {% if bookservice %}
+    {% set se_by = search_by %}
+    {% set se_term = search_term %}
         <div class="modal show" id="bookServiceModal" tabindex="-1" aria-labelledby="bookServiceModalLabel" aria-hidden="true" style="display: block;">
         <div class="modal-dialog">
             <div class="modal-content shadow-lg custom-modal">
             <div class="modal-header">
                 <h5 class="modal-title" id="bookServiceModalLabel">Book Service</h5>
-                <a href="{{ url_for('search') }}" class="btn-close" aria-label="Close"></a>
+                <a href="{{ url_for('search',search_by=se_by,search_term=se_term) }}" class="btn-close" aria-label="Close"></a>
             </div>
             
             <form id="bookServiceForm" method="POST" action="{{ url_for('book_search_service') }}">

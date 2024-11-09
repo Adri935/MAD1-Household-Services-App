@@ -1,5 +1,22 @@
 {% extends "layout2.html" %}
 
+{% block javascript %}
+<script type="text/javascript">
+    function input_box(s1) {
+        var s1 = document.getElementById(s1);
+        if (s1.value === 'date') {
+            var box = document.getElementById('search_date');
+            box.style.display = 'block';
+            document.getElementById('search_text').style.display = 'none';
+        } else {
+            document.getElementById('search_text').style.display = 'block';
+            document.getElementById('search_date').style.display = 'none';
+        }
+    }
+
+</script>
+{% endblock %}
+
 {% block navbar %}
 <ul class="nav nav-underline">
     <li class="nav-item">
@@ -17,7 +34,7 @@
     </li>
         
     <li class="nav-item">
-        <a class="nav-link" href="#">Summary</a>
+        <a class="nav-link" href="{{ url_for('summary') }}">Summary</a>
     </li>
     {% endif %}
     <li class="nav-item">
@@ -46,12 +63,8 @@
                 <form action="{{ url_for('search_new_requests') }}" method="get" class="d-flex align-items-center">
                     <div class="input-group">
                         <span class="m-2">Search:&nbsp;</span>
-                        <select class="form-control form-select" name="search_by" aria-label="Search by">
-                            {% if search_by == 'date' %}
-                                <option value="date" selected>Date (YYYY-MM-DD)</option>
-                            {% else %}
-                                <option value="date">Date (YYYY-MM-DD)</option>
-                            {% endif %}
+                        <select class="form-control form-select" id="search_by" name="search_by" onchange="input_box(this.id)" aria-label="Search by">
+                            <option value="" selected disabled>Search by</option>
                             {% if search_by == 'city' %}
                                 <option value="city" selected>City/Address</option>
                             {% else %}
@@ -62,8 +75,19 @@
                             {% else %}
                                 <option value="pincode">Pincode</option>
                             {% endif %}
+                            {% if search_by == 'date' %}
+                                <option value="date" selected>Date</option>
+                            {% else %}
+                                <option value="date">Date</option>
+                            {% endif %}
                         </select>
-                            <input type="text" class="form-control" name="search_term" placeholder="Search..." value="{{ search_term }}" aria-label="Search">
+                        {% if search_by == 'date' %}
+                        <input type="text" class="form-control" id="search_text" style="display: none;" name="search_term" placeholder="Search..." value="{{ search_term }}" aria-label="Search">
+                        <input type="date" class="form-control" id="search_date" style="display: block;" name="search_date" placeholder="Search..." value="{{ search_date }}" aria-label="Search">
+                        {% else %}
+                        <input type="text" class="form-control" id="search_text" style="display: block;" name="search_term" placeholder="Search..." value="{{ search_term }}" aria-label="Search">
+                        <input type="date" class="form-control" id="search_date" style="display: none;" name="search_date" placeholder="Search..." value="{{ search_date }}" aria-label="Search">
+                        {% endif %}    
                         <button class="btn btn-custom" type="submit">Search</button>
                     </div>
                 </form>

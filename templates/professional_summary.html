@@ -7,9 +7,9 @@
     </li>
     {% if not blocked %}
     <li class="nav-item dropdown">
-        <a class="nav-link dropdown-toggle active" style="color:white;" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Search</a>
+        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Search</a>
         <ul class="dropdown-menu custom-dropdown">
-            <li><a class="dropdown-item" style="background-color: rgba(0, 187, 140, 0.856); color:white; text-decoration: underline;" href="{{ url_for('search_new_requests') }}">New Requests</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('search_new_requests') }}">New Requests</a></li>
             {% if user.is_approved %}
             <li><a class="dropdown-item" href="{{ url_for('search_your_requests')}}">Your Requests</a></li>
             {% endif %}
@@ -17,7 +17,7 @@
     </li>
         
     <li class="nav-item">
-        <a class="nav-link" href="#">Summary</a>
+        <a class="nav-link active" style="color:white;" href="{{ url_for('summary') }}">Summary</a>
     </li>
     {% endif %}
     <li class="nav-item">
@@ -29,7 +29,7 @@
 </ul>
 {% endblock navbar %}
 {% block dashboard_message %}
-    SEARCH
+    YOUR STATISTICS
 {% endblock dashboard_message %}
 
 
@@ -43,6 +43,103 @@
         Your account is not approved yet. Please wait for the administrator to approve your account to view your stats.
     </div>
     {% else %}
-    
+    <div class="d-flex m-auto shadow flex-row justify-content-around align-items-stretch flex-wrap" style="width:80%">
+        <div class="p-3 border border-success-subtle col-lg-6 col-sm-12" style="min-width:50%;">
+          <div><canvas id="Requests" height="300"></canvas></div>
+          <h3 class="page-headings m-2 p-2 text-center">Requests</h3>
+        </div>
+        <div class="p-3 border border-success-subtle col-lg-6 col-sm-12" style="min-width:50%;">
+          {% if reviews_nums %}
+            <div><canvas id="Reviews"></canvas></div>
+          {% else %}
+            <div class="alert alert-warning fade show" role="alert">
+              You have no reviews yet.
+            </div>
+            <canvas height="220"></canvas>
+          {% endif %}
+          <h3 class="page-headings m-2 p-2 text-center">Reviews</h3>
+        </div>
+    </div>
+      
+      <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+      
+      <script>
+        const reqs_ctx = document.getElementById('Requests');
+
+      
+        new Chart(reqs_ctx, {
+          type: 'bar',
+          data: {
+            labels: ['Accepted','Rejected','In Progress','Completed'],
+            datasets: [{
+              label: 'Number of requests',
+              data: {{ reqs_nums | safe }},
+              backgroundColor: [
+                'rgba(54, 162, 235, 0.2)',
+                'rgba(255, 99, 132, 0.2)',
+                'rgba(255, 205, 86, 0.2)',
+                'rgba(87, 211, 104, 0.2)'
+              ],
+              borderColor: [
+                'rgb(54, 162, 235)',
+                'rgb(255, 99, 132)',
+                'rgb(255, 205, 86)',
+                'rgb(87, 211, 104)'
+              ],
+              borderWidth: 1,
+              barThickness: 50
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  stepSize: 1
+                }
+              }
+            }
+          }
+        });
+
+        const revs_ctx = document.getElementById('Reviews');
+
+        new Chart(revs_ctx, {
+          type: 'doughnut',
+          data: {
+            labels: [
+              '5 Stars',
+              '4 Stars',
+              '3 Stars',
+              '2 Stars',
+              '1 Star'
+            ],
+            datasets: [{
+              label: 'Number of Reviews',
+              data: {{ reviews_nums | safe }},
+              backgroundColor: [
+                '#baffc1',
+                '#dbffc7',
+                '#ffec99',
+                '#FFAAA5',
+                '#FF8B94' 
+              ],
+              hoverOffset: 4
+            }],
+          },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  position: 'right'
+                }
+              }
+            }
+        });
+        
+      </script>
     {% endif %}
 {% endblock content %}

@@ -2,7 +2,7 @@ from flask import render_template,url_for,request,flash,redirect,current_app
 from app import app
 from datetime import datetime
 from models import db,User,Customer,ServiceProfessional,Service,ServiceRequest,Review,RequestRejected,ReportCustomer
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from flask_bcrypt import Bcrypt
 from flask_login import login_user,current_user,logout_user,login_required
 from dotenv import load_dotenv
@@ -378,29 +378,30 @@ def view_reports():
 @app.route('/services', methods=['GET', 'POST'])
 def services():
     stype = request.args.get('stype')
+    userblocked = current_user.blocked if current_user.is_authenticated else False
     if stype == 'cleaning':
         services = Service.query.filter(Service.name.ilike('%cleaning%')).all()
-        return render_template('services.html', title='Services', stype=stype, services=services, blocked=current_user.blocked)
+        return render_template('services.html', title='Services', stype=stype, services=services, blocked=userblocked)
 
     elif stype == 'repair':
         services = Service.query.filter(Service.name.ilike('%repair%')).all()
-        return render_template('services.html', title='Services', stype=stype, services=services, blocked=current_user.blocked)
+        return render_template('services.html', title='Services', stype=stype, services=services, blocked=userblocked)
 
     elif stype == 'salon':
         services = Service.query.filter(Service.name.ilike('%salon%')).all()
-        return render_template('services.html', title='Services', stype=stype, services=services, blocked=current_user.blocked)
+        return render_template('services.html', title='Services', stype=stype, services=services, blocked=userblocked)
 
     elif stype == 'plumbing':
         services = Service.query.filter(Service.name.ilike('%plumbing%')).all()
-        return render_template('services.html', title='Services', stype=stype, services=services, blocked=current_user.blocked)
+        return render_template('services.html', title='Services', stype=stype, services=services, blocked=userblocked)
 
     elif stype == 'electrical':
         services = Service.query.filter(Service.name.ilike('%electrical%')).all()
-        return render_template('services.html', title='Services', stype=stype, services=services, blocked=current_user.blocked)
+        return render_template('services.html', title='Services', stype=stype, services=services, blocked=userblocked)
 
     else:
         services = Service.query.order_by(Service.name).all()
-        return render_template('services.html', title='Services', services=services, blocked=current_user.blocked)
+        return render_template('services.html', title='Services', services=services, blocked=userblocked)
 
 @app.route('/professional_details', methods=['GET', 'POST'])
 def professional_details():
@@ -563,8 +564,158 @@ def search():
             services = Service.query.all()
         return render_template('customer_search.html', title='Search', services=services, search_term=search_term, search_by=search_by, blocked=current_user.blocked)
     elif current_user.role == 'admin':
-        return render_template('admin_search.html', title='Search')
+        search_for = request.args.get('search_for')
+        search_by = request.args.get('search_by')
+        search_term = request.args.get('search_term') or ''
+        if search_for == 'serviceprofessionals':
+            approval_status = request.args.get('approval_status')
+            if approval_status == 'approved':
+                if search_by == 'name':
+                    results = ServiceProfessional.query.filter(ServiceProfessional.name.ilike(f'%{search_term}%')).filter_by(is_approved=True).all()
+                elif search_by == 'service':
+                    results = ServiceProfessional.query.filter(ServiceProfessional.service.has(Service.name.ilike(f'%{search_term}%'))).filter_by(is_approved=True).all()
+                elif search_by == 'city':
+                    results = ServiceProfessional.query.filter(ServiceProfessional.address.ilike(f'%{search_term}%')).filter_by(is_approved=True).all()
+                else:
+                    results = ServiceProfessional.query.filter_by(is_approved=True).all()
+            elif approval_status == 'unapproved':
+                if search_by == 'name':
+                    results = ServiceProfessional.query.filter(ServiceProfessional.name.ilike(f'%{search_term}%')).filter_by(is_approved=False).all()
+                elif search_by == 'service':
+                    results = ServiceProfessional.query.filter(ServiceProfessional.service.has(Service.name.ilike(f'%{search_term}%'))).filter_by(is_approved=False).all()
+                elif search_by == 'city':
+                    results = ServiceProfessional.query.filter(ServiceProfessional.address.ilike(f'%{search_term}%')).filter_by(is_approved=False).all()
+                else:
+                    results = ServiceProfessional.query.filter_by(is_approved=False).all()
+            else:
+                if search_by == 'name':
+                    results = ServiceProfessional.query.filter(ServiceProfessional.name.ilike(f'%{search_term}%')).all()
+                elif search_by == 'service':
+                    results = ServiceProfessional.query.filter(ServiceProfessional.service.has(Service.name.ilike(f'%{search_term}%'))).all()
+                elif search_by == 'city':
+                    results = ServiceProfessional.query.filter(ServiceProfessional.address.ilike(f'%{search_term}%')).all()
+                else:
+                    results = ServiceProfessional.query.all()
+        elif search_for == 'customers':
+            if search_by == 'name':
+                customers = Customer.query.filter(Customer.name.ilike(f'%{search_term}%'))
+            elif search_by == 'city':
+                customers = Customer.query.filter(Customer.address.ilike(f'%{search_term}%'))
+            if request.args.get('user_blocked'):
+                customers = customers.filter(Customer.user.has(User.blocked==True))
+            if request.args.get('user_reported'):
+                customers = customers.filter(Customer.reports.any())
+            results = customers.all()
+        elif search_for == 'services':
+            results = Service.query.filter(Service.name.ilike(f'%{search_term}%')).all()
+        elif search_for == 'requests':
+            if request.args.get("request_status") == "open":
+                if search_by == 'service':
+                    results = ServiceRequest.query.filter(ServiceRequest.service.has(Service.name.ilike(f'%{search_term}%'))).filter(or_(ServiceRequest.service_status==x for x in ('requested','accepted','in progress'))).order_by(ServiceRequest.date_of_request.desc()).all()
+                elif search_by == 'customer':
+                    results = ServiceRequest.query.filter(ServiceRequest.customer.has(Customer.name.ilike(f'%{search_term}%'))).filter(or_(ServiceRequest.service_status==x for x in ('requested','accepted','in progress'))).order_by(ServiceRequest.date_of_request.desc()).all()
+                elif search_by == 'serviceprofessional':
+                    results = ServiceRequest.query.filter(ServiceRequest.professional.has(ServiceProfessional.name.ilike(f'%{search_term}%'))).filter(or_(ServiceRequest.service_status==x for x in ('requested','accepted','in progress'))).order_by(ServiceRequest.date_of_request.desc()).all()
+            elif request.args.get("request_status") == "completed":
+                if search_by == 'service':
+                    results = ServiceRequest.query.filter(ServiceRequest.service.has(Service.name.ilike(f'%{search_term}%'))).filter(ServiceRequest.service_status=='completed').order_by(ServiceRequest.date_of_request.desc()).all()
+                elif search_by == 'customer':
+                    results = ServiceRequest.query.filter(ServiceRequest.customer.has(Customer.name.ilike(f'%{search_term}%'))).filter(ServiceRequest.service_status=='completed').order_by(ServiceRequest.date_of_request.desc()).all()
+                elif search_by == 'serviceprofessional':
+                    results = ServiceRequest.query.filter(ServiceRequest.professional.has(ServiceProfessional.name.ilike(f'%{search_term}%'))).filter(ServiceRequest.service_status=='completed').order_by(ServiceRequest.date_of_request.desc()).all()
+            else:
+                if search_by == 'service':
+                    results = ServiceRequest.query.filter(ServiceRequest.service.has(Service.name.ilike(f'%{search_term}%'))).order_by(ServiceRequest.date_of_request.desc()).all()
+                elif search_by == 'customer':
+                    results = ServiceRequest.query.filter(ServiceRequest.customer.has(Customer.name.ilike(f'%{search_term}%'))).order_by(ServiceRequest.date_of_request.desc()).all()
+                elif search_by == 'serviceprofessional':
+                    results = ServiceRequest.query.filter(ServiceRequest.professional.has(ServiceProfessional.name.ilike(f'%{search_term}%'))).order_by(ServiceRequest.date_of_request.desc()).all()
+        else:
+            results = None
 
+        return render_template('admin_search.html', title='Search', results=results, search_for=search_for, search_by=search_by, search_term=search_term)
+    elif current_user.role == 'professional':
+        return redirect(url_for('search_new_requests'))
+
+
+@app.route('/search/block_user', methods=['GET', 'POST'])
+def search_block_user():
+    if request.method == 'POST':
+        user_id = request.form.get('user_id')
+        user = db.session.get(User,user_id)
+        user.blocked = True
+        db.session.commit()
+        flash('User blocked successfully.','success')
+        return redirect(url_for('search'))
+
+    user_id = request.args.get('user_id')
+    user = db.session.get(User,user_id)
+    return render_template('admin_search.html', block_user=user, title='Search')
+
+@app.route('/search/unblock_user', methods=['GET', 'POST'])
+def search_unblock_user():
+    if request.method == 'POST':
+        user_id = request.form.get('user_id')
+        user = db.session.get(User,user_id)
+        user.blocked = False
+        db.session.commit()
+        flash('User unblocked successfully.','success')
+        return redirect(url_for('search'))
+
+    user_id = request.args.get('user_id')
+    user = db.session.get(User,user_id)
+    return render_template('admin_search.html', unblock_user=user, title='Search')
+
+@app.route('/search/view_reports')
+def search_view_reports():
+    customer_id = request.args.get('customer_id')
+    reports = ReportCustomer.query.filter_by(customer_id=customer_id).all()
+    return render_template('admin_search.html', title='Search', reports=reports)
+
+@app.route('/search/approve_professional', methods=['GET', 'POST'])
+def search_approve_professional():
+    if request.method == 'POST':
+        professional_id = request.form.get('prof_id')
+        professional = db.session.get(ServiceProfessional,professional_id)
+        professional.is_approved = True
+        db.session.commit()
+        flash('Professional approved successfully.','success')
+        return redirect(url_for('search'))
+
+    professional_id = request.args.get('prof_id')
+    professional = db.session.get(ServiceProfessional,professional_id)
+    return render_template('admin_search.html', approve_professional=professional, title='Search')
+
+@app.route('/search/edit_service', methods=['GET', 'POST'])
+def search_edit_service():
+    if request.method == 'POST':
+        service_id = request.form.get('id')
+        service = db.session.get(Service,service_id)
+        service.name = request.form['name']
+        service.description = request.form['description']
+        service.price = request.form['price']
+        service.time_required = request.form['time_required']
+        db.session.commit()
+        flash('Service updated successfully.','success')
+        return redirect(url_for('search'))
+
+    service_id = request.args.get('service_id')
+    service_to_edit = db.session.get(Service,service_id)
+    return render_template('admin_search.html', service_to_edit=service_to_edit, title='Search')
+
+@app.route('/search/delete_service', methods=['GET', 'POST'])
+def search_delete_service():
+    if request.method == 'POST':
+        service_id = request.form.get('id')
+        service = db.session.get(Service,service_id)
+        db.session.delete(service)
+        db.session.commit()
+        flash('Service deleted successfully.','success')
+        return redirect(url_for('search'))
+
+    service_id = request.args.get('service_id')
+    delete_service = db.session.get(Service,service_id)
+    return render_template('admin_search.html', delete_service=delete_service, title='Search')
 
 @app.route('/search_new_requests')
 @login_required
@@ -577,21 +728,22 @@ def search_new_requests():
     rejected_requests = [x for (x,) in rej_requests]
     search_by = request.args.get('search_by')
     search_term = request.args.get('search_term') or ''
+    search_date = request.args.get('search_date') or ''
     if search_by == 'pincode':
         if not search_term.isdigit():
             flash('Please enter a valid pincode.','danger')
             return redirect(url_for('search_new_requests'))
 
-        new_requests = ServiceRequest.query.filter_by(pincode=int(search_term)).filter_by(service_status='requested').order_by(ServiceRequest.date_of_request.desc()).all()
+        new_requests = ServiceRequest.query.filter_by(pincode=int(search_term)).filter_by(service_status='requested').filter_by(service_id=user.service_id).order_by(ServiceRequest.date_of_request.desc()).all()
 
     elif search_by == 'date':
-        new_requests = ServiceRequest.query.filter(func.date(ServiceRequest.date_of_request)==search_term).filter_by(service_status='requested').order_by(ServiceRequest.date_of_request.desc()).all()
+        new_requests = ServiceRequest.query.filter(func.date(ServiceRequest.date_of_request)==search_date).filter_by(service_status='requested').filter_by(service_id=user.service_id).order_by(ServiceRequest.date_of_request.desc()).all()
 
     elif search_by == 'city':
-        new_requests = ServiceRequest.query.filter(ServiceRequest.address.ilike(f'%{search_term}%')).filter_by(service_status='requested').order_by(ServiceRequest.date_of_request.desc()).all()
+        new_requests = ServiceRequest.query.filter(ServiceRequest.address.ilike(f'%{search_term}%')).filter_by(service_status='requested').filter_by(service_id=user.service_id).order_by(ServiceRequest.date_of_request.desc()).all()
 
     else:
-        new_requests = ServiceRequest.query.filter(ServiceRequest.service_status=='requested').order_by(ServiceRequest.date_of_request.desc()).all()
+        new_requests = ServiceRequest.query.filter(ServiceRequest.service_status=='requested').filter_by(service_id=user.service_id).order_by(ServiceRequest.date_of_request.desc()).all()
     return render_template('professional_search1.html', title='Search', user=user, rejected_requests=rejected_requests, new_requests=new_requests, search_by=search_by, search_term=search_term, blocked=current_user.blocked)
 
 
@@ -646,6 +798,7 @@ def search_your_requests():
     user = ServiceProfessional.query.filter_by(user_id=current_user.id).first()
     search_by = request.args.get('search_by')
     search_term = request.args.get('search_term') or ''
+    search_date = request.args.get('search_date') or ''
     if search_by == 'pincode':
         if not search_term.isdigit():
             flash('Please enter a valid pincode.','danger')
@@ -654,7 +807,7 @@ def search_your_requests():
         prev_requests = ServiceRequest.query.filter_by(pincode=int(search_term)).filter_by(prof_id=user.id).order_by(ServiceRequest.date_of_request.desc()).all()
 
     elif search_by == 'date':
-        prev_requests = ServiceRequest.query.filter(func.date(ServiceRequest.date_of_request)==search_term).filter_by(prof_id=user.id).order_by(ServiceRequest.date_of_request.desc()).all()
+        prev_requests = ServiceRequest.query.filter(func.date(ServiceRequest.date_of_request)==search_date).filter_by(prof_id=user.id).order_by(ServiceRequest.date_of_request.desc()).all()
 
     elif search_by == 'city':
         prev_requests = ServiceRequest.query.filter(ServiceRequest.address.ilike(f'%{search_term}%')).filter_by(prof_id=user.id).order_by(ServiceRequest.date_of_request.desc()).all()
@@ -662,7 +815,7 @@ def search_your_requests():
     else:
         prev_requests = ServiceRequest.query.filter_by(prof_id=user.id).order_by(ServiceRequest.date_of_request.desc()).all()
     
-    return render_template('professional_search2.html', title='Search', user=user, prev_requests=prev_requests, search_term=search_term, search_by=search_by, blocked=current_user.blocked)
+    return render_template('professional_search2.html', title='Search', user=user, prev_requests=prev_requests, search_term=search_term, search_date=search_date, search_by=search_by, blocked=current_user.blocked)
 
 @app.route('/search_your_requests/mark_in_progress', methods=['GET', 'POST'])
 def search_your_requests_in_progress():
@@ -702,10 +855,18 @@ def book_search_service():
         flash('Service booked successfully.','success')
         return redirect(url_for('search'))
 
+    search_by=request.args.get('search_by')
+    search_term=request.args.get('search_term') or ''
+    if search_by == 'name':
+        services = Service.query.filter(Service.name.ilike(f'%{search_term}%')).all()
+    elif search_by == 'price':
+        services = Service.query.filter(Service.price<=int(search_term)).order_by(Service.price.desc()).all()
+    else:
+        services = Service.query.all()
     service_id = request.args.get('service_id')
     service = db.session.get(Service,service_id)
     customer = Customer.query.filter_by(user_id=current_user.id).first()
-    return render_template('customer_search.html', title='Book Service', bookservice=service, customer=customer)
+    return render_template('customer_search.html', title='Book Service', services=services, bookservice=service, customer=customer)
 
 ### PROFESSIONAL ROUTES ###
 @app.route('/accept_request', methods=['GET', 'POST'])
@@ -795,3 +956,38 @@ def report_customer():
     rejected_requests = [x for (x,) in rej_requests]
     reviews = Review.query.filter_by(professional_id=user.id).order_by(Review.date_submitted.desc()).all()
     return render_template('professional_dashboard.html', title='Home', report_customer=report_cust, user=user, reviews=reviews, new_requests=new_requests, prev_requests=prev_requests, rejected_requests=rejected_requests, blocked=current_user.blocked)
+
+
+### SUMMARY ROUTES ###
+@app.route('/summary')
+def summary():
+    if current_user.is_authenticated:
+        if current_user.role == 'professional':
+            user = ServiceProfessional.query.filter_by(user_id=current_user.id).first()
+            rejected = len(RequestRejected.query.filter_by(prof_id=user.id).all())
+            accepted = len(ServiceRequest.query.filter_by(prof_id=user.id).filter_by(service_status='accepted').all())
+            in_progress = len(ServiceRequest.query.filter_by(prof_id=user.id).filter_by(service_status='in progress').all())
+            completed = len(ServiceRequest.query.filter_by(prof_id=user.id).filter_by(service_status='completed').all())
+            reqs_nums = [accepted, rejected, in_progress, completed]
+            if completed > 0:
+                reviews_nums = [len(Review.query.filter_by(professional_id=user.id).filter_by(rating=5).all()), len(Review.query.filter_by(professional_id=user.id).filter_by(rating=4).all()), len(Review.query.filter_by(professional_id=user.id).filter_by(rating=3).all()), len(Review.query.filter_by(professional_id=user.id).filter_by(rating=2).all()), len(Review.query.filter_by(professional_id=user.id).filter_by(rating=1).all())]
+            else:
+                reviews_nums = None
+            return render_template('professional_summary.html', title='Summary', user=user, reqs_nums=reqs_nums, reviews_nums=reviews_nums, blocked=current_user.blocked)
+        elif current_user.role == 'customer':
+            user = Customer.query.filter_by(user_id=current_user.id).first()
+            reqs_nums = [len(ServiceRequest.query.filter_by(cust_id=user.id).filter_by(service_status='requested').all()),len(ServiceRequest.query.filter_by(cust_id=user.id).filter_by(service_status="accepted").all()),len(ServiceRequest.query.filter_by(cust_id=user.id).filter_by(service_status="in progress").all()),len(ServiceRequest.query.filter_by(cust_id=user.id).filter_by(service_status="completed").all())]
+            return render_template('customer_summary.html', title='Summary', user=user, reqs_nums=reqs_nums, blocked=current_user.blocked)
+        else:
+            open_requests = len(ServiceRequest.query.filter_by(service_status='requested').all())
+            rejected = len(RequestRejected.query.all())
+            accepted = len(ServiceRequest.query.filter_by(service_status='accepted').all())
+            in_progress = len(ServiceRequest.query.filter_by(service_status='in progress').all())
+            completed = len(ServiceRequest.query.filter_by(service_status='completed').all())
+            reqs_nums = [open_requests, accepted, rejected, in_progress, completed]
+            reviews_nums = [len(Review.query.filter_by(rating=5).all()), len(Review.query.filter_by(rating=4).all()), len(Review.query.filter_by(rating=3).all()), len(Review.query.filter_by(rating=2).all()), len(Review.query.filter_by(rating=1).all())]
+            return render_template('admin_summary.html', title='Summary', reqs_nums=reqs_nums, reviews_nums=reviews_nums)
+    else:
+        return render_template('customer_summary.html',title='Summary')   
+
+

@@ -1,0 +1,103 @@
+{% extends "layout2.html" %}
+{% block navbar %}
+<ul class="nav nav-underline">
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('home') }}">Home</a>
+    </li>
+    
+    {% if not blocked %}
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('services') }}">Services</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('search') }}">Search</a>
+    </li>
+    {% endif %}
+    {% if current_user.is_authenticated %}
+    {% if not blocked %}
+    <li class="nav-item">
+        <a class="nav-link active" style="color:white;" href="{{ url_for('summary') }}">Summary</a>
+    </li>
+    {% endif %}
+    <li class="nav-item">
+        <a href="{{ url_for('profile') }}" class="nav-link">Profile</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+    </li>
+    {% else %}
+    <li class="nav-item">
+        <a href="{{ url_for('login') }}" class="nav-link">Login</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('customer_register') }}">Register</a>
+    </li>
+    {% endif %}
+</ul>
+{% endblock navbar %}
+{% block dashboard_message %}
+    YOUR STATISTICS
+{% endblock dashboard_message %}
+
+
+{% block content %}
+    {% if blocked %}
+        <div class="alert alert-danger fade show m-2" role="alert">
+            Your account has been blocked. Please contact the administrator at <a href="mailto:admin.homeease@homeease.com">admin.homeease@homeease.com</a>
+        </div>
+    {% elif not current_user.is_authenticated %}
+        <div class="alert alert-warning fade show m-2" role="alert">
+            You need to be logged in to view your stats.
+        </div>
+    {% else %}
+    <div class="p-3 border border-success-subtle m-auto shadow flex-row justify-content-around align-items-stretch flex-wrap" style="width:60%">
+          <div><canvas id="Requests"height="300"></canvas></div>
+          <h3 class="page-headings m-2 p-2 text-center">Requests</h3>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+      
+      <script>
+        const reqs_ctx = document.getElementById('Requests');
+
+      
+        new Chart(reqs_ctx, {
+          type: 'bar',
+          data: {
+            labels: ['Requested','Accepted','In Progress','Completed'],
+            datasets: [{
+              label: 'Number of requests',
+              data: {{ reqs_nums | safe }},
+              backgroundColor: [
+                'rgba(153, 102, 255, 0.2)',
+                'rgba(54, 162, 235, 0.2)',
+                'rgba(255, 205, 86, 0.2)',
+                'rgba(87, 211, 104, 0.2)'
+              ],
+              borderColor: [
+                'rgb(153, 102, 255)',
+                'rgb(54, 162, 235)',
+                'rgb(255, 205, 86)',
+                'rgb(87, 211, 104)'
+              ],
+              borderWidth: 1,
+              barThickness: 50
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  stepSize: 1
+                }
+              }
+            }
+          }
+        });
+        </script>
+
+    {% endif %}
+{% endblock content %}

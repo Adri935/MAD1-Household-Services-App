@@ -1,14 +1,79 @@
 {% extends "layout2.html" %}
+
+{% block javascript %}
+    <script type="text/javascript">
+        function populate(s1,s2) {
+            var s1=document.getElementById(s1);
+            var s2=document.getElementById(s2);
+            s2.innerHTML = "";
+            if(s1.value == "serviceprofessionals") {
+                var optionArray = ["name|Name", "service|Service Name", "city|City"];
+            } else if(s1.value == "services") {
+                var optionArray = ["name|Service Name"];
+            } else if(s1.value == "customers") {
+                var optionArray = ["name|Name", "city|City"];
+            } else if(s1.value == "requests") {
+                var optionArray = ["service|Service Name","customer|Customer Name","serviceprofessional|Service Professional Name"];
+            }
+            for(var option in optionArray) {
+                var pair = optionArray[option].split("|");
+                var newOption = document.createElement("option");
+                newOption.value = pair[0];
+                newOption.innerHTML = pair[1];
+                s2.options.add(newOption);
+            }
+        }
+        function filters(s1){
+            var s1=document.getElementById(s1);
+
+            if (s1.value === "serviceprofessionals") {
+                var filters = document.getElementById("professional-filters");
+                var disable1 = document.getElementById("customer-filters");
+                var disable2 = document.getElementById("request-filters");
+                filters.style.display = "block";
+                disable1.style.display = "none";
+                disable2.style.display = "none";
+            }
+            else if (s1.value === "customers") {
+                var filters = document.getElementById("customer-filters");
+                var disable1 = document.getElementById("professional-filters");
+                var disable2 = document.getElementById("request-filters");
+                filters.style.display = "block";
+                disable1.style.display = "none";
+                disable2.style.display = "none";
+            }
+            else if (s1.value === "requests") {
+                var filters = document.getElementById("request-filters");
+                var disable1 = document.getElementById("professional-filters");
+                var disable2 = document.getElementById("customer-filters");
+                filters.style.display = "block";
+                disable1.style.display = "none";
+                disable2.style.display = "none";
+            }
+            else if (s1.value === "services") {
+                var disable1 = document.getElementById("professional-filters");
+                var disable2 = document.getElementById("customer-filters");
+                var disable3 = document.getElementById("request-filters");
+                disable1.style.display = "none";
+                disable2.style.display = "none";
+                disable3.style.display = "none";
+            }
+
+        }
+
+    </script>
+{% endblock javascript %}
+
 {% block navbar %}
 <ul class="nav nav-underline">
     <li class="nav-item">
-        <a class="nav-link active" style="color:white;" href="{{ url_for('home') }}">Home</a>
+        <a class="nav-link" href="{{ url_for('home') }}">Home</a>
     </li>
     <li class="nav-item">
-        <a class="nav-link" href="{{ url_for('search') }}">Search</a>
+        <a class="nav-link active" style="color:white;" href="{{ url_for('search') }}">Search</a>
     </li>
     <li class="nav-item">
-        <a class="nav-link" href="#">Summary</a>
+        <a class="nav-link" href="{{ url_for('summary') }}">Summary</a>
     </li>
     <li class="nav-item">
         <a href="{{ url_for('profile') }}" class="nav-link">Profile</a>
@@ -22,23 +87,447 @@
     SEARCH
 {% endblock dashboard_message %}
 
+
 {% block content %}
-    <div class="container my-4">
-        <div class="row justify-content-end">
-            <div class="col-lg-7 col-md-12">
-                <form action="{{ url_for('search') }}" method="get" class="d-flex align-items-center">
-                    <div class="input-group">
-                        <span class="m-2">Search:&nbsp;</span>
-                        <select class="form-select" name="search_type" aria-label="Search type">
-                            <option value="serviceprofessional" selected>Service Professionals</option>
-                            <option value="service">Services</option>
-                            <option value="customer">Customers</option>
-                        </select>
-                        <input type="text" class="form-control" name="search_term" placeholder="Search..." aria-label="Search">
-                        <button class="btn btn-custom" type="submit">Search</button>
+        <div class="container my-4 flex-wrap w-100">
+                <form action="{{ url_for('search') }}" method="get" class="align-items-center justify-content-evenly">
+                        
+                    <div class="row">
+                        <div class="input-group w-100">
+                            <span class="m-2 col-lg-1 col-sm-12">Search for:&nbsp;</span>
+                            <div class="col-lg-3 col-sm-12">
+                                <select class="form-select form-control" id="search_for" name="search_for" onchange="populate(this.id,'search_by'),filters(this.id)" aria-label="Search for" required>
+                                    <option value="" disabled selected>Select</option>
+                                    <option value="serviceprofessionals">Service Professionals</option>
+                                    <option value="customers">Customers</option>
+                                    <option value="services">Services</option>
+                                    <option value="requests">Service Requests</option>
+                                </select>
+                                <div id="professional-filters" class="mt-3" style="display: none;">
+                                    <small>
+                                    <div class="form-check form-check-inline">
+                                        <input type="radio" id="approved" name="approval_status" value="approved" class="form-check-input">
+                                        <label for="approved" class="form-check-label">Approved</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input type="radio" id="unapproved" name="approval_status" value="unapproved" class="form-check-input">
+                                        <label for="unapproved" class="form-check-label">Unapproved</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input type="radio" id="all" name="approval_status" value="" class="form-check-input">
+                                        <label for="all" class="form-check-label">All</label>
+                                    </div>
+                                    </small>
+                                </div>
+                                <div id="customer-filters" class="mt-3" style="display: none;">
+                                    <small>
+                                    <div class="form-check form-check-inline">
+                                        <input type="checkbox" id="reported" name="user_reported" value="reported" class="form-check-input">
+                                        <label for="reported" class="form-check-label">Reported</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input type="checkbox" id="blocked" name="user_blocked" value="blocked" class="form-check-input">
+                                        <label for="blocked" class="form-check-label">Blocked</label>
+                                    </div>
+                                    </small>
+                                </div>
+                                <div id="request-filters" class="mt-3" style="display: none;">
+                                    <small>
+                                    <div class="form-check form-check-inline">
+                                        <input type="radio" id="open" name="request_status" value="open" class="form-check-input">
+                                        <label for="open" class="form-check-label">Open/In Progress</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input type="radio" id="completed" name="request_status" value="completed" class="form-check-input">
+                                        <label for="completed" class="form-check-label">Completed</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input type="radio" id="all" name="request_status" value="" class="form-check-input">
+                                        <label for="all" class="form-check-label">All</label>
+                                    </div>
+                                    </small>
+                                </div>
+                            </div>
+                            <span class="m-2 col-lg-1 col-sm-12">Search By:&nbsp;</span>
+                            <div class="col-lg-3 col-sm-12">
+                                <select class="form-select form-control" name="search_by" id="search_by" aria-label="Search by">
+                                    <option value="" disabled selected>Select Search For first</option>
+                                </select>
+                            </div>
+                            <div class="col-lg-2 col-sm-12">
+                                <input type="text" class="form-control" name="search_term" placeholder="Search..." aria-label="Search">
+                            </div>
+                            <button class="btn btn-custom col-lg-1 col-sm-12 flex-shrink-1 mx-1" style="height:40px; width:90px; padding:2px;" type="submit">Search</button>
+                        </div>
                     </div>
                 </form>
+        <div>
+
+        <div class="container my-4 flex-wrap w-100">
+            <div class="row">
+                <div class="col-lg-12">
+                    <h3 class="page-headings">Search Results</h3>
+
+                    {% if not results %}
+                        <div class="alert alert-warning fade show" role="alert">
+                            No results found.
+                        </div>
+                    {% else %}
+                    
+                    {% if search_for == "serviceprofessionals" %}
+                    <table class="table table-responsive table-hover align-middle">
+                        <thead class="align-middle">
+                        <tr class="table-primary">
+                            <th class="t-header" scope="col">User ID</th>
+                            <th class="t-header" scope="col">Photo</th>
+                            <th class="t-header" scope="col">Name</th>
+                            <th class="t-header" scope="col">Mobile</th>
+                            <th class="t-header" scope="col">Address</th>
+                            <th class="t-header" scope="col" style="width:5%;">Service ID</th>
+                            <th class="t-header" scope="col">Identity-Proof</th>
+                            <th class="t-header" scope="col">Certification(s)</th>
+                            <th class="t-header" scope="col">Number of Requests</th>
+                            <th class="t-header" scope="col">Approval Status</th>
+                            <th class="t-header" style="width: 10%;" scope="col">Action</th>
+                        </tr>
+                        </thead>
+                        
+                        <tbody class="table-group-divider">
+                        {% for prof in results %}
+                            <tr>
+                                <td scope="row">{{ prof.user_id }}</td>
+                                <td>
+                                    <img src="{{ url_for('static', filename=prof.photo.split('static/')[1]) }}" alt="Profile Photo" width="60">
+                                </td>
+                                <td>{{ prof.name }}</td>
+                                <td>{{ prof.phone }}</td>
+                                <td>{{ prof.address }}<br>Pincode: {{ prof.pincode }}</td>
+                                <td>{{ prof.service_id }}</td>
+                                <td><a href="{{ url_for('static', filename=prof.identity_proof.split('static/')[1]) }}" target="_blank">View ID Proof</a></td>
+                                <td>
+                                    {% if prof.certifications != None %}
+                                    <a href="{{ url_for('static', filename=prof.certifications.split('static/')[1]) }}" target="_blank">View Certifications</a>
+                                    {% else %}
+                                        No certifications uploaded
+                                    {% endif %}
+                                    <small>Experience: {{ prof.experience }} years</small>
+                                </td>
+                                <td>
+                                    {{ prof.requests | length }}
+                                </td>
+                                <td>
+                                    {% if prof.is_approved %}
+                                        Approved
+                                    {% else %}
+                                        Pending
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if prof.is_approved %}
+                                        <a href="" class="btn mr-1 mb-1 btn-success btn-sm disabled">Approved</a>
+                                    {% else %}
+                                        <a href="{{ url_for('search_approve_professional', prof_id=prof.id) }}" class="btn mr-1 mb-1 btn-outline-primary btn-sm">Approve</a> 
+                                    {% endif %}
+            
+                                    {% if not prof.user.blocked %}
+                                        <a href="{{ url_for('search_block_user', user_id=prof.user_id) }}" class="btn mb-1 btn-outline-danger btn-sm">Block</a>
+                                    {% else %}
+                                        <a href="{{ url_for('search_unblock_user', user_id=prof.user_id) }}" class="btn mb-1 btn-outline-success btn-sm">Unblock</a>
+                                    {% endif %}
+                                </td>
+                            </tr>        
+            
+                        {% endfor %}
+                        </tbody> 
+                    </table>
+                    {% elif search_for == "customers" %}
+                    <table class="table table-responsive table-hover align-middle">
+                        <thead class="align-middle">
+                        <tr class="table-primary">
+                            <th class="t-header" scope="col">User ID</th>
+                            <th class="t-header" scope="col">Name</th>
+                            <th class="t-header" scope="col">Mobile</th>
+                            <th class="t-header" scope="col">Address</th>
+                            <th class="t-header" scope="col">No. of Requests</th>
+                            <th class="t-header" scope="col">No. of Reviews</th>
+                            <th class="t-header" scope="col">No. of Reports</th>
+                            <th class="t-header" scope="col">Action</th>
+                        </tr>
+                        </thead>
+                        
+                        <tbody class="table-group-divider">
+                        {% for customer in results %}
+                            <tr>
+                                <td scope="row">{{ customer.user_id }}</td>
+                                <td>{{ customer.name }}</td>
+                                <td>{{ customer.phone }}</td>
+                                <td>{{ customer.address }}<br>Pincode: {{ customer.pincode }}</td>
+                                <td>{{ customer.requests | length }}</td>
+                                <td>{{ customer.reviews | length }}</td>
+                                <td>
+                                    {% if customer.reports|length > 0 %}
+                                        <a href="{{ url_for('search_view_reports',customer_id=customer.id)}}">{{ customer.reports | length }}</a>
+                                    {% else %}
+                                        {{ customer.reports | length }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if not customer.user.blocked %}
+                                        <a href="{{ url_for('search_block_user', user_id=customer.user_id) }}" class="btn mb-1 btn-outline-danger">Block</a>
+                                    {% else %}
+                                        <a href="{{ url_for('search_unblock_user', user_id=customer.user_id) }}" class="btn mb-1 btn-outline-success">Unblock</a>
+                                    {% endif %}
+                                </td>
+                            </tr>        
+            
+                        {% endfor %}
+                        </tbody> 
+                    </table>
+
+                    {% elif search_for == "services" %}
+                    <table class="table table-hover align-middle">
+                        <thead class="align-middle">
+                        <tr class="table-primary">
+                            <th class="t-header" scope="col">ID</th>
+                            <th class="t-header" scope="col">Name</th>
+                            <th class="t-header" scope="col" style="width: 27%;">Description</th>
+                            <th class="t-header" scope="col">Base Price (In Rupees)</th>
+                            <th class="t-header" scope="col">Estimated Time Required</th>
+                            <th class="t-header" scope="col" style="width: 10%;">No. of Professionals</th>
+                            <th class="t-header" scope="col" style="width: 7%;">No. of Requests</th>
+                            <th class="t-header" scope="col" style="width: 15%;">Action</th>
+                        </tr>
+                        </thead>
+                        
+                        <tbody class="table-group-divider">
+                        {% for service in results %}
+                            <tr>
+                                <td scope="row">{{ service.id }}</td>
+                                <td>{{ service.name }}</td>
+                                <td>{{ service.description }}</td>
+                                <td>{{ service.price }}</td>
+                                <td>{{ service.time_required }}</td>
+                                <td>{{ service.service_professionals | length }}</td>
+                                <td>{{ service.service_requests | length }}</td>
+                                <td>
+                                    <a href="{{ url_for('search_edit_service', service_id=service.id) }}" class="btn mr-1 mb-1 btn-outline-primary btn-sm">Edit</a> 
+                                    <a href="{{ url_for('search_delete_service', service_id=service.id) }}" class="btn mb-1 btn-outline-danger btn-sm">Delete</a>
+                                </td>
+                            </tr>
+                
+                        {% endfor %}
+                        </tbody>
+                    </table>
+
+                    {% elif search_for == "requests" %}
+                    <table class="table table-hover align-middle">
+                        <thead class="align-middle">
+                            <tr class="table-primary">
+                                <th class="t-header" scope="col" style="width: 5%;">Request ID</th>
+                                <th class="t-header" scope="col" style="width: 10%;">Customer</th>
+                                <th class="t-header" scope="col" style="width: 30%;">Service</th>
+                                <th class="t-header" scope="col" style="width: 15%;">Professional Name</th>
+                                <th class="t-header" scope="col" style="width: 10%;">Phone Number</th>
+                                <th class="t-header" scope="col" style="width: 10%;">Date of Request</th>
+                                <th class="t-header" scope="col" style="width: 10%;">Date of Completion</th>
+                                <th class="t-header" scope="col" style="width: 15%;">Remarks</th>
+                                <th class="t-header" scope="col" style="width: 15%;">Status</th>
+                            </tr>
+                        </thead>
+                        
+                        <tbody class="table-group-divider">
+                            {% for request in results %}
+                            <tr>
+                                <td scope="row">{{ request.id }}</td>
+                                <td>{{ request.customer.name }}</td>
+                                <td>{{ request.service.name }}
+                                    <br>
+                                    <small>{{ request.service.description }}</small>
+                                </td>
+                                {% if request.prof_id %}
+                                <td>{{ request.professional.name }}</td>
+                                <td>{{ request.professional.phone }}</td>
+                                {% else %}
+                                <td colspan="2" style="text-align: center;">Professional not assigned yet</td>
+                                {% endif %}
+                                <td>{{ request.date_of_request | utc_to_local }}</td>
+                                <td>
+                                    {% if request.date_of_completion %}
+                                    {{ request.date_of_completion | utc_to_local }}
+                                    {% else %}
+                                    Not completed yet
+                                    {% endif %}
+                                </td>
+                                <td>{{ request.remarks }}
+                                </td>
+                                <td>
+                                    {{ request.service_status | capitalize }}
+                                </td>
+                            </tr>
+            
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% endif %}
+                {% endif %}
+                </div>
             </div>
         </div>
-    </div>
+
+        <!-- MODALS -->
+        <!-- Modal for blocking user -->
+        {% if block_user %}
+            <div class="modal show" id="blockUserModal" tabindex="-1" aria-labelledby="blockUserModalLabel" aria-hidden="true" style="display: block;">
+            <div class="modal-dialog">
+                <div class="modal-content shadow-lg custom-modal">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="blockUserModalLabel">Block User</h5>
+                    <a href="{{ url_for('search') }}" class="btn-close" aria-label="Close"></a>
+                </div>
+                
+                <form id="blockUserForm" method="POST" action="{{ url_for('search_block_user')}}">
+                <div class="modal-body">
+                    <input type="hidden" name="user_id" value="{{ block_user.id }}">
+                    <p>Are you sure you want to block the User with ID <b>{{ block_user.id }}</b>?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-danger">Block</button>
+                </div>
+                </form>
+            </div>
+            </div>
+        {% endif %}
+
+        <!-- Unblock User Modal -->
+        {% if unblock_user %}
+        <div class="modal show" id="unblockUserModal" tabindex="-1" aria-labelledby="unblockUserModalLabel" aria-hidden="true" style="display: block;">
+        <div class="modal-dialog">
+            <div class="modal-content shadow-lg custom-modal">
+            <div class="modal-header">
+                <h5 class="modal-title" id="unblockUserModalLabel">Unblock User</h5>
+                <a href="{{ url_for('search') }}" class="btn-close" aria-label="Close"></a>
+            </div>
+            
+            <form id="unblockUserForm" method="POST" action="{{ url_for('search_unblock_user')}}">
+            <div class="modal-body">
+                <input type="hidden" name="user_id" value="{{ unblock_user.id }}">
+                <p>Are you sure you want to unblock the User with ID <b>{{ unblock_user.id }}</b>?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-success">Unblock</button>
+            </div>
+            </form>
+        </div>
+        </div>
+        {% endif %}
+
+        <!-- View Reports Modal -->
+        {% if reports %}
+        <div class="modal show" id="viewReportsModal" tabindex="-1" aria-labelledby="viewReportsModalLabel" aria-hidden="true" style="display: block;">
+        <div class="modal-dialog">
+            <div class="modal-content shadow-lg custom-modal">
+            <div class="modal-header">
+                <h5 class="modal-title" id="viewReportsModalLabel">Reports</h5>
+                <a href="{{ url_for('search') }}" class="btn-close" aria-label="Close"></a>
+            </div>
+            
+            <div class="modal-body">
+                <ul class="list-group">
+                    {% for report in reports %}
+                        <li class="list-group-item">
+                            <p><b>Report ID:</b> {{ report.id }}</p>
+                            <p><b>Customer Name:</b> {{ report.customer.name }}</p>
+                            <p><b>Reported by:</b> {{ report.professional.name }} (User ID: {{ report.professional.user_id}})</p>
+                            <p><b>Reason:</b> {{ report.remarks }}</p>
+                            <p><b>Reported at:</b> {{ report.date_submitted | utc_to_local }}</p>
+                        </li>  
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        </div>
+        {% endif %}
+
+        <!-- Approve Professional Modal -->
+        {% if approve_professional %}
+        <div class="modal show" id="approveProfessionalModal" tabindex="-1" aria-labelledby="approveProfessionalModalLabel" aria-hidden="true" style="display: block;">
+        <div class="modal-dialog">
+            <div class="modal-content shadow-lg custom-modal">
+            <div class="modal-header">
+                <h5 class="modal-title" id="approveProfessionalModalLabel">Approve Professional</h5>
+                <a href="{{ url_for('search') }}" class="btn-close" aria-label="Close"></a>
+            </div>
+            
+            <form id="approveProfessionalForm" method="POST" action="{{ url_for('search_approve_professional') }}">
+            <div class="modal-body">
+                <input type="hidden" name="prof_id" value="{{ approve_professional.id }}">
+                <p>Are you sure you want to approve the Service Professional {{ approve_professional.name }}?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-success">Approve</button>
+            </div>
+            </form>
+        </div>
+        </div>
+        {% endif %}
+
+        <!-- Edit Service Modal -->
+        {% if service_to_edit %}
+            <div class="modal show" id="editServiceModal" tabindex="-1" aria-labelledby="editServiceModalLabel" aria-hidden="true" style="display: block;">
+            <div class="modal-dialog">
+                <div class="modal-content shadow-lg custom-modal">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editServiceModalLabel">Edit Service</h5>
+                    <a href="{{ url_for('search') }}" class="btn-close" aria-label="Close"></a>
+                </div>
+                <div class="modal-body">
+                    <form id="editServiceForm" method="POST" action="{{ url_for('search_edit_service') }}">
+                    <input type="hidden" name="id" value="{{ service_to_edit.id }}">
+                    <div class="mb-3">
+                        <label for="serviceName" class="form-label">Service Name</label>
+                        <input type="text" class="form-control" id="serviceName" name="name" value="{{ service_to_edit.name }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="serviceDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="serviceDescription" name="description">{{ service_to_edit.description }}</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="servicePrice" class="form-label">Base Price</label>
+                        <input type="number" class="form-control" id="servicePrice" name="price" value="{{ service_to_edit.price }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="serviceTime" class="form-label">Time Required</label>
+                        <input type="text" class="form-control" id="serviceTime" name="time_required" value="{{ service_to_edit.time_required }}">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+                    </form>
+                </div>
+                </div>
+            </div>
+            </div>
+        {% endif %}
+
+        <!-- Delete Service Modal -->
+        {% if delete_service %}
+            <div class="modal show" id="deleteServiceModal" tabindex="-1" aria-labelledby="deleteServiceModalLabel" aria-hidden="true" style="display: block;">
+            <div class="modal-dialog">
+                <div class="modal-content shadow-lg custom-modal">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteServiceModalLabel">Delete Service</h5>
+                    <a href="{{ url_for('search') }}" class="btn-close" aria-label="Close"></a>
+                </div>
+                
+                <form id="deleteServiceForm" method="POST" action="{{ url_for('search_delete_service') }}">
+                <div class="modal-body">
+                    <input type="hidden" name="id" value="{{ delete_service.id }}">
+                    <p>Are you sure you want to delete the service "{{ delete_service.name }}"?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </div>
+                </form>
+            </div>
+            </div>
+        {% endif %}
+    
 {% endblock content %}

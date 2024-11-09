@@ -8,7 +8,7 @@
         <a class="nav-link" href="{{ url_for('search') }}">Search</a>
     </li>
     <li class="nav-item">
-        <a class="nav-link" href="#">Summary</a>
+        <a class="nav-link" href="{{ url_for('summary') }}">Summary</a>
     </li>
     <li class="nav-item">
         <a href="{{ url_for('profile') }}" class="nav-link">Profile</a>
@@ -62,7 +62,9 @@
     <!-- Add New Service Button -->
     <a href="{{ url_for('add_service') }}" class="btn btn-outline-success btn-sm col-md-2 offset-md-10">+ Add New Service</a>
     </div>
+
     <hr>
+
     <div class="container m-auto mt-4 table-responsive">
         <h3 class="page-headings py-2">Service Professionals</h3>
         <table class="table table-hover align-middle">
@@ -87,7 +89,7 @@
                 <tr>
                     <td scope="row">{{ prof.user_id }}</td>
                     <td>
-                        <img src="{{ url_for('static', filename=prof.photo.split('static/')[1].replace('\\', '/')) }}" alt="Profile Photo" width="80">
+                        <img src="{{ url_for('static', filename=prof.photo.split('static/')[1]) }}" alt="Profile Photo" width="80">
                     </td>
                     <td>{{ prof.name }}</td>
                     <td>{{ prof.phone }}</td>
