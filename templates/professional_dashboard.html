@@ -10,7 +10,9 @@
         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Search</a>
         <ul class="dropdown-menu custom-dropdown">
             <li><a class="dropdown-item" href="{{ url_for('search_new_requests') }}">New Requests</a></li>
+            {% if user.is_approved %}
             <li><a class="dropdown-item" href="{{ url_for('search_your_requests') }}">Your Requests</a></li>
+            {% endif %}
         </ul>
     </li>
         

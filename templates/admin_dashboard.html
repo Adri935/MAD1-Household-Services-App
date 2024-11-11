@@ -73,7 +73,7 @@
                 <th class="t-header" scope="col">User ID</th>
                 <th class="t-header" scope="col">Photo</th>
                 <th class="t-header" scope="col">Name</th>
-                <th class="t-header" scope="col">Mobile</th>
+                <th class="t-header" scope="col">Contact</th>
                 <th class="t-header" scope="col">Address</th>
                 <th class="t-header" scope="col">Service_ID</th>
                 <th class="t-header" scope="col">Identity-Proof</th>
@@ -92,7 +92,7 @@
                         <img src="{{ url_for('static', filename=prof.photo.split('static/')[1]) }}" alt="Profile Photo" width="80">
                     </td>
                     <td>{{ prof.name }}</td>
-                    <td>{{ prof.phone }}</td>
+                    <td>{{ prof.phone }}<br><small class="text-break">{{ prof.user.email }}</small></td>
                     <td>{{ prof.address }}<br>Pincode: {{ prof.pincode }}</td>
                     <td>{{ prof.service_id }}</td>
                     <td><a href="{{ url_for('static', filename=prof.identity_proof.split('static/')[1]) }}" target="_blank">View ID Proof</a></td>
@@ -102,6 +102,7 @@
                         {% else %}
                             No certifications uploaded
                         {% endif %}
+                        <br>
                         <small>Experience: {{ prof.experience }} years</small>
                     </td>
                     <td>
@@ -141,7 +142,7 @@
             <tr class="table-primary">
                 <th class="t-header" scope="col">User ID</th>
                 <th class="t-header" scope="col">Name</th>
-                <th class="t-header" scope="col">Mobile</th>
+                <th class="t-header" scope="col">Contact</th>
                 <th class="t-header" scope="col">Address</th>
                 <th class="t-header" scope="col">No. of Requests</th>
                 <th class="t-header" scope="col">No. of Reviews</th>
@@ -155,7 +156,7 @@
                 <tr>
                     <td scope="row">{{ customer.user_id }}</td>
                     <td>{{ customer.name }}</td>
-                    <td>{{ customer.phone }}</td>
+                    <td>{{ customer.phone }}<br><small class="text-break">{{ customer.user.email }}</small></td>
                     <td>{{ customer.address }}<br>Pincode: {{ customer.pincode }}</td>
                     <td>{{ customer.requests | length }}</td>
                     <td>{{ customer.reviews | length }}</td>

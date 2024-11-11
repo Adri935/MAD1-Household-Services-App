@@ -238,7 +238,7 @@ def profile():
                 path = professional.photo
                 if path!='static/defaultpfp.jpeg':
                     os.remove(os.path.join(current_app.root_path, path))
-            professional.photo = photo_path.replace('\\', '/')
+                professional.photo = photo_path.replace('\\', '/')
             
             if certifications != None:
                 _ , ext2 = os.path.splitext(certifications.filename)
@@ -248,7 +248,7 @@ def profile():
                 path = professional.certifications
                 if path!=None:
                     os.remove(os.path.join(current_app.root_path, path))
-            professional.certifications = certifications_path.replace('\\', '/')
+                professional.certifications = certifications_path.replace('\\', '/')
 
             db.session.commit()
             flash('Profile updated successfully.','success')
@@ -415,6 +415,9 @@ def professional_details():
 
 @app.route('/book_service', methods=['GET', 'POST'])
 def book_service():
+    if not current_user.is_authenticated:
+        flash('Please login to book a service.','danger')
+        return redirect(url_for('services'))
     if request.method == 'POST':
         stype = request.form.get('stype')
         service_id = request.form.get('id')
@@ -794,6 +797,9 @@ def search_new_requests_reject():
 def search_your_requests():
     if current_user.role != 'professional':
         return redirect(url_for('dashboard'))
+    if current_user.service_professionals[0].is_approved == False:
+        flash('You need to be approved to view your requests.','danger')
+        return redirect(url_for('dashboard'))
 
     user = ServiceProfessional.query.filter_by(user_id=current_user.id).first()
     search_by = request.args.get('search_by')
@@ -837,6 +843,9 @@ def search_your_requests_in_progress():
 
 @app.route('/book_searched_service', methods=['GET', 'POST'])
 def book_search_service():
+    if not current_user.is_authenticated:
+        flash('Please login to book a service.','danger')
+        return redirect(url_for('search'))
     if request.method == 'POST':
         service_id = request.form.get('id')
         cust_id = Customer.query.filter_by(user_id=current_user.id).first().id

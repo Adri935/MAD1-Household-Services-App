@@ -91,14 +91,23 @@
                 <input type="hidden" name="id" value="{{ bookservice.id }}">
                 <p>You are booking for service <b>{{ bookservice.name }}</b>.</p>
                 <p><b>Base price:</b> &#8377;{{ bookservice.price }}</p>
-                <p><b>Your address:</b> {{ customer.address }} - {{ customer.pincode }}</p>
-                <p class="text-secondary"><i>If you wish to book for a different address, please update your address in <a href="{{ url_for('profile') }}">profile</a>.</i></p>
-                <label for="remarks">Remarks:</label>
-                <textarea class="form-control" id="remarks" name="remarks" rows="2"></textarea>
-            </div>
-            <div class="modal-footer">
-                <button type="submit" class="btn btn-success">Confirm My Booking!</button>
-            </div>
+                {% if bookservice.service_professionals %}
+                        <p><b>Your address:</b> {{ customer.address }} - {{ customer.pincode }}</p>
+                        <p class="text-secondary"><i>If you wish to book for a different address, please update your address in <a href="{{ url_for('profile') }}">profile</a>.</i></p>
+                        <label for="remarks">Remarks:</label>
+                        <textarea class="form-control" id="remarks" name="remarks" rows="2"></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-success">Confirm My Booking!</button>
+                    </div>
+                {% else %}
+                        <p><b>Sorry, no professionals available for this service at the moment.</b></p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-success disabled">Confirm My Booking!</button>
+                    </div>
+                {% endif %}
+            
             </form>
         </div>
         </div>

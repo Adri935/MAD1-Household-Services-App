@@ -53,9 +53,9 @@
             <div class="d-flex align-items-center">
                 <div class="flex-shrink-0">
                     {% if user.photo %}
-                    <img class="rounded-circle account-img" src="{{ url_for('static', filename=user.photo.split('static/')[1]) }}" alt="Profile Photo" style="width: 8em; object-fit:cover;">
+                    <img class="rounded-circle account-img" src="{{ url_for('static', filename=user.photo.split('static/')[1]) }}" alt="Profile Photo" style="width: 6em; height: 6em; object-fit:cover;">
                     {% else %}
-                    <img class="rounded-circle account-img" src="{{ url_for('static', filename='defaultpfp.jpeg') }}" alt="Profile Photo" style="width:8em;">
+                    <img class="rounded-circle account-img" src="{{ url_for('static', filename='defaultpfp.jpeg') }}" alt="Profile Photo" style="width: 6em; height: 6em;">
                     {% endif %}
                 </div>
                 <div class="flex-grow-1 my-auto">
@@ -66,8 +66,7 @@
                                 Admin
                         {% endif %}
                     </h1>
-                    {% if current_user.role!='admin' %}
-                    {% if user.user.role == 'professional' %}
+                    {% if current_user.role == 'professional' %}
                         <small>
                         {% if user.is_approved %}
                             <span class="badge rounded-pill bg-success">Approved Professional</span>
@@ -77,15 +76,17 @@
                         {% else %}
                             <span class="badge rounded-pill bg-warning">Pending Approval</span>
                         {% endif %}
-                        
                         </small>
                     {% endif %}
-                    {% endif %}
-                    <p class="text-secondary">
+                    <p class="text-secondary text-break">
                         {% if user.role == 'admin' %}
                             {{ user.email }}
                         {% else %}
                             {{ user.user.email }}
+                            {% if current_user.role == 'professional' %}
+                                <br>
+                                <span class="text-secondary">{{ user.service.name }}</span>
+                            {% endif %}
                         {% endif %}
                     </p>
                 </div>
