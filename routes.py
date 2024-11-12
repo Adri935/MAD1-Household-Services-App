@@ -108,7 +108,7 @@ def professional_register():
         id_proof = request.files.get('idProof')
         certification = request.files.get('certification')
 
-        if not name or not email or not password or not conf_pwd or not phone or not service_id or not experience or not id_proof or not address or not pincode:
+        if not name or not email or not password or not conf_pwd or not phone or not service_id or not experience or not id_proof or not address or not pincode or not certification:
             flash('Please fill all the fields','danger')
             return redirect(url_for('professional_register'))
 
@@ -215,7 +215,7 @@ def profile():
                 path = customer.photo
                 if path!='static/defaultpfp.jpeg' and path!=None:
                     os.remove(os.path.join(current_app.root_path, path))
-            customer.photo = photo_path.replace('\\', '/')
+                customer.photo = photo_path.replace('\\', '/')
 
             db.session.commit()
             flash('Profile updated successfully.','success')
