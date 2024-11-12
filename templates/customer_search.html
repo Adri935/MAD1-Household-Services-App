@@ -73,7 +73,11 @@
 
     <div class="container-fluid align-items-center" style="min-width: min-content;">
         <div class="row">
-            <h2 class="page-headings col-9 mx-auto px-3">Search Results</h2>
+            <h2 class="page-headings col-9 mx-auto px-3">Search Results
+                {% if services %}
+                    ({{ services | length }} Results)
+                {% endif %}
+            </h2>
         </div>
         {% if services %}
         <ol class="list-group list-group-numbered m-auto w-75"> 

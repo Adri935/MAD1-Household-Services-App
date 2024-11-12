@@ -166,7 +166,12 @@
         <div class="container my-4 flex-wrap w-100">
             <div class="row">
                 <div class="col-lg-12">
-                    <h3 class="page-headings">Search Results</h3>
+                    <h3 class="page-headings">
+                        Search Results 
+                        {% if results %}
+                        ({{ results | length }} Results)
+                        {% endif %}
+                    </h3>
 
                     {% if not results %}
                         <div class="alert alert-warning fade show" role="alert">
@@ -326,7 +331,7 @@
                             <tr class="table-primary">
                                 <th class="t-header" scope="col" style="width: 5%;">Request ID</th>
                                 <th class="t-header" scope="col" style="width: 10%;">Customer</th>
-                                <th class="t-header" scope="col" style="width: 30%;">Service</th>
+                                <th class="t-header" scope="col" style="width: 20%;">Service</th>
                                 <th class="t-header" scope="col" style="width: 15%;">Professional Name</th>
                                 <th class="t-header" scope="col" style="width: 10%;">Phone Number</th>
                                 <th class="t-header" scope="col" style="width: 10%;">Date of Request</th>
@@ -341,10 +346,7 @@
                             <tr>
                                 <td scope="row">{{ request.id }}</td>
                                 <td>{{ request.customer.name }}</td>
-                                <td>{{ request.service.name }}
-                                    <br>
-                                    <small>{{ request.service.description }}</small>
-                                </td>
+                                <td>{{ request.service.name }}</td>
                                 {% if request.prof_id %}
                                 <td>{{ request.professional.name }}</td>
                                 <td>{{ request.professional.phone }}</td>

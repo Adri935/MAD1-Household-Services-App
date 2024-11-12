@@ -176,7 +176,9 @@ def dashboard():
     customers = Customer.query.all()
     professionals = ServiceProfessional.query.all()
     if current_user.role == 'admin':
-        return render_template('admin_dashboard.html',title='Admin Dashboard',services=services, customers=customers, professionals=professionals, blockedUsers=[user.id for user in User.query.filter_by(blocked=True).all()])
+        requests = ServiceRequest.query.order_by(ServiceRequest.date_of_request.desc()).all()
+        reviews = Review.query.order_by(Review.date_submitted.desc()).all()
+        return render_template('admin_dashboard.html',title='Admin Dashboard',services=services, customers=customers, professionals=professionals, requests=requests, reviews=reviews, blockedUsers=[user.id for user in User.query.filter_by(blocked=True).all()])
     if current_user.role == 'customer':
         user = Customer.query.filter_by(user_id=current_user.id).first()        
         requests = ServiceRequest.query.filter_by(cust_id=user.id).order_by(ServiceRequest.date_of_request.desc()).all()

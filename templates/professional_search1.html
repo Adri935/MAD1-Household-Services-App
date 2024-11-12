@@ -100,7 +100,11 @@
     Your account is not approved yet. Please wait for the administrator to approve your account.
 </div>
 <div class="container  table-responsive">
-    <h3 class="page-headings py-2">Open Requests</h3>
+    <h3 class="page-headings py-2">Open Requests
+        {% if new_requests %}
+            ({{ new_requests | length }} Results)
+        {% endif %}
+    </h3>
     <table class="table table-hover align-middle">
         <thead class="align-middle">
             <tr class="table-primary">
