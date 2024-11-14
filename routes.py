@@ -297,6 +297,10 @@ def delete_service():
     if request.method == 'POST':
         service_id = request.form.get('id')
         service = db.session.get(Service,service_id)
+        professionals = db.session.query(ServiceProfessional.user_id).filter(ServiceProfessional.service_id==service_id).all()
+        for prof in professionals:
+            user = db.session.get(User,prof[0])
+            db.session.delete(user)
         db.session.delete(service)
         db.session.commit()
         flash('Service deleted successfully.','success')
